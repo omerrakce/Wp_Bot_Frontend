@@ -8,7 +8,7 @@ import {
   AlertCircle, RefreshCw, CloudOff, Sparkles,
 } from 'lucide-react'
 import useThemeStore from '../store/themeStore'
-import useLangStore from '../store/langStore'
+import useLangStore from '../store/LangStore'
 import { t } from '../i18n'
 
 const ZAMAN_FILTRELER = [

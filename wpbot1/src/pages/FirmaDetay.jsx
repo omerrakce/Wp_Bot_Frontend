@@ -10,7 +10,7 @@ import {
   Package, Users, ImageIcon, Smile, ShoppingCart, AlertCircle, RefreshCw,
 } from 'lucide-react'
 import useThemeStore from '../store/themeStore'
-import useLangStore from '../store/langStore'
+import useLangStore from '../store/LangStore'
 import { t } from '../i18n'
 
 export default function FirmaDetay() {

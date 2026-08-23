@@ -6,7 +6,7 @@ import Input from '../components/common/Input'
 import Button from '../components/common/Button'
 import useAuthStore from '../store/authStore'
 import useThemeStore from '../store/themeStore'
-import useLangStore from '../store/langStore'
+import useLangStore from '../store/LangStore'
 import { t } from '../i18n'
 import { Sun, Moon, Languages, ShieldCheck } from 'lucide-react'
 
