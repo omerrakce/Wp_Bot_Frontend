@@ -1,0 +1,26 @@
+# Bağımlılıklar
+**/node_modules
+
+# Derleme çıktıları
+**/dist
+**/dist-ssr
+
+# Ortam değişkenleri — ASLA GitHub'a yüklenmemeli
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Editör / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Sistem dosyaları
+.DS_Store
+Thumbs.db
+
+# Log dosyaları
+**/*.log
+**/npm-debug.log*
+
+**/.vs
