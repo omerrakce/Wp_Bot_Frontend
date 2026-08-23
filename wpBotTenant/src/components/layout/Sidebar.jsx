@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, Package, MessageSquare, Settings, X, BarChart2, Zap, TrendingUp, Users, Building2 } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
 import useThemeStore from '../../store/themeStore'
-import useLangStore from '../../store/LangStore'
+import useLangStore from '../../store/langStore'
 import { t } from '../../i18n'
 
 const getLinks = (lang) => [
