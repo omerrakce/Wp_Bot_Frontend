@@ -4,7 +4,7 @@ import useAuthStore from '../../store/authStore'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useThemeStore from '../../store/themeStore'
-import useLangStore from '../../store/langStore'
+import useLangStore from '../../store/LangStore'
 
 const mockBildirimler = [
   { id: 1, baslik: 'Yeni beğeni', mesaj: 'MŞT-1042 "Siyah Deri Ceket" ürününü beğendi.', zaman: '3 dk önce', okundu: false },
