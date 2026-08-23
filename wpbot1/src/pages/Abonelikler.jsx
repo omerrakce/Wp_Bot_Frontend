@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useThemeStore from '../store/themeStore'
-import useLangStore from '../store/langStore'
+import useLangStore from '../store/LangStore'
 import { t } from '../i18n'
 
 const SAYFA_BOYUTU = 20
