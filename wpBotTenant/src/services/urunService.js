@@ -55,9 +55,10 @@ const apiyeGiden = (form, gorselUrl) => ({
 })
 
 export const urunService = {
-    async listele({ sayfa = 1, boyut = 20, arama = '' } = {}) {
+      async listele({ sayfa = 1, boyut = 20, arama = '', kategori = '' } = {}) {
     const params = new URLSearchParams({ page: sayfa, page_size: boyut })
     if (arama.trim()) params.set('search', arama.trim())
+    if (kategori) params.set('category', kategori)
 
     const veri = await api.get(`/api/tenant/products?${params}`)
 
@@ -94,4 +95,34 @@ export const urunService = {
     const veri = await api.put(`/api/tenant/products/${id}`, apiyeGiden(form, gorselUrl))
     return apidenGelen(veri)
   },
+
+    async kategoriIstatistikleri() {
+    const veri = await api.get('/api/tenant/products/category-stats')
+    const liste = Array.isArray(veri) ? veri : (veri.items ?? [])
+    return liste.map((k) => ({
+      kategori: k.category ?? k.kategori ?? 'Kategorisiz',
+      adet: k.count ?? k.adet ?? 0,
+    }))
+  },
+
+  async whatsappSenkronEt() {
+    const veri = await api.post('/api/tenant/whatsapp/sync-catalog')
+    return {
+      basarili: veri.success ?? veri.basarili ?? true,
+      mesaj: veri.message ?? veri.mesaj ?? null,
+      gonderilenSayisi: veri.synced_count ?? veri.gonderilen ?? null,
+    }
+  },
+
+}
+
+// Ürünleri kategoriye göre gruplar — { "Elbise": [...], "Etek": [...] }
+export const gruplaKategoriye = (urunler) => {
+  const gruplar = {}
+  urunler.forEach((u) => {
+    const kategori = u.category || 'Diğer'
+    if (!gruplar[kategori]) gruplar[kategori] = []
+    gruplar[kategori].push(u)
+  })
+  return gruplar
 }

@@ -1,20 +1,23 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { KATEGORILER, SEZONLAR, RENK_ONERILERI, BEDEN_GRUPLARI } from '../mocks/mockData'
 import { urunService } from '../services/urunService'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
 import Input from '../components/common/Input'
+import CategoryCombobox from '../components/common/CategoryCombobox'
 import EmptyState from '../components/common/EmptyState'
 import Card from '../components/common/Card'
 import Spinner from '../components/common/Spinner'
 import {
   Plus, Upload, X, Search, Pencil, Trash2,
   ChevronLeft, ChevronRight, AlertCircle, RefreshCw, MoreHorizontal,
+  LayoutList, LayoutGrid, ArrowLeft, Send, Folder,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useThemeStore from '../store/themeStore'
 
 const SAYFA_BOYUTU = 20
+const KATEGORI_URUN_SAYFA_BOYUTU = 20
 
 const bosForm = {
   name: '', price: '', category: KATEGORILER[0], renk: '',
@@ -34,7 +37,7 @@ const Secim = ({ label, value, onChange, options, bosSecenek, isDark, textPrimar
   </div>
 )
 
-const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor }) => {
+const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor, kategoriSecenekleri }) => {
   const secenekler = { isDark, textPrimary, borderColor }
   const mevcutBedenler = BEDEN_GRUPLARI[form.bedenGrubu] || []
 
@@ -55,9 +58,9 @@ const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, s
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Secim label="Kategori *" value={form.category}
-          onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-          options={KATEGORILER} {...secenekler} />
+        <CategoryCombobox label="Kategori *" value={form.category}
+          onChange={(v) => setForm((f) => ({ ...f, category: v }))}
+          options={kategoriSecenekleri} />
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" style={{ color: isDark ? '#D1D5DB' : '#374151' }}>Renk *</label>
           <input list="renk-onerileri" value={form.renk}
@@ -154,7 +157,6 @@ const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, s
   )
 }
 
-// 1 … 4 [5] 6 … 197 şeklinde sayfa numaraları üretir
 const sayfaNumaralari = (mevcut, toplam) => {
   if (toplam <= 7) return Array.from({ length: toplam }, (_, i) => i + 1)
   if (mevcut <= 4) return [1, 2, 3, 4, 5, '...', toplam]
@@ -166,6 +168,7 @@ export default function Katalog() {
   const { theme } = useThemeStore()
   const isDark = theme === 'dark'
 
+  // Tablo görünümü state'i
   const [urunler, setUrunler] = useState([])
   const [toplam, setToplam] = useState(0)
   const [sayfa, setSayfa] = useState(1)
@@ -174,6 +177,19 @@ export default function Katalog() {
 
   const [arama, setArama] = useState('')
   const [aramaGirdi, setAramaGirdi] = useState('')
+  const [gorunumModu, setGorunumModu] = useState('tablo') // 'tablo' | 'kategori'
+
+  // Kategori görünümü state'i
+  const [kategoriIstatistik, setKategoriIstatistik] = useState([])
+  const [kategoriIstatistikYukleniyor, setKategoriIstatistikYukleniyor] = useState(false)
+  const [kategoriIstatistikHata, setKategoriIstatistikHata] = useState(null)
+  const [seciliKategori, setSeciliKategori] = useState(null)
+  const [kategoriSayfa, setKategoriSayfa] = useState(1)
+  const [kategoriUrunler, setKategoriUrunler] = useState([])
+  const [kategoriToplam, setKategoriToplam] = useState(0)
+  const [kategoriUrunYukleniyor, setKategoriUrunYukleniyor] = useState(false)
+  const [kategoriUrunHata, setKategoriUrunHata] = useState(null)
+  const [kategoriArama, setKategoriArama] = useState('')
 
   const [modalOpen, setModalOpen] = useState(false)
   const [duzenleModal, setDuzenleModal] = useState(false)
@@ -184,6 +200,7 @@ export default function Katalog() {
   const [preview, setPreview] = useState(null)
   const [dosya, setDosya] = useState(null)
   const [dragOver, setDragOver] = useState(false)
+  const [senkronEdiliyor, setSenkronEdiliyor] = useState(false)
 
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
   const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
@@ -194,28 +211,24 @@ export default function Katalog() {
   const borderColor = isDark ? '#374151' : '#E5E7EB'
   const tagBg = isDark ? '#374151' : '#F3F4F6'
   const codeBg = isDark ? '#111827' : '#F3F4F6'
+  const subtleBg = isDark ? '#111827' : '#F9FAFB'
 
+  // --- Tablo görünümü veri çekme ---
   const verileriGetir = useCallback(async (hedefSayfa, aramaMetni) => {
     setYukleniyor(true)
     setHata(null)
     try {
-      const sonuc = await urunService.listele({
-        sayfa: hedefSayfa,
-        boyut: SAYFA_BOYUTU,
-        arama: aramaMetni,
-      })
+      const sonuc = await urunService.listele({ sayfa: hedefSayfa, boyut: SAYFA_BOYUTU, arama: aramaMetni })
       setUrunler(sonuc.urunler)
       setToplam(sonuc.toplam)
     } catch (e) {
       setHata(e.message)
       setUrunler([])
-      setToplam(0)
     } finally {
       setYukleniyor(false)
     }
   }, [])
 
-  // Arama kutusuna yazarken 400ms bekle, sonra sunucuya sor
   useEffect(() => {
     const zamanlayici = setTimeout(() => {
       setSayfa(1)
@@ -225,11 +238,80 @@ export default function Katalog() {
   }, [aramaGirdi])
 
   useEffect(() => {
-    verileriGetir(sayfa, arama)
-  }, [sayfa, arama, verileriGetir])
+    if (gorunumModu === 'tablo') verileriGetir(sayfa, arama)
+  }, [sayfa, arama, gorunumModu, verileriGetir])
 
   const toplamSayfa = Math.max(1, Math.ceil(toplam / SAYFA_BOYUTU))
-  const gosterilen = urunler
+
+  // --- Kategori istatistikleri ---
+  const kategoriIstatistikGetir = useCallback(async () => {
+    setKategoriIstatistikYukleniyor(true)
+    setKategoriIstatistikHata(null)
+    try {
+      const liste = await urunService.kategoriIstatistikleri()
+      setKategoriIstatistik(liste)
+    } catch (e) {
+      setKategoriIstatistikHata(e.message)
+    } finally {
+      setKategoriIstatistikYukleniyor(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (gorunumModu === 'kategori' && !seciliKategori) {
+      kategoriIstatistikGetir()
+    }
+  }, [gorunumModu, seciliKategori, kategoriIstatistikGetir])
+
+  // --- Seçili kategorideki ürünler ---
+  const kategoriUrunleriGetir = useCallback(async (kategori, hedefSayfa, aramaMetni) => {
+    setKategoriUrunYukleniyor(true)
+    setKategoriUrunHata(null)
+    try {
+      const sonuc = await urunService.listele({
+        sayfa: hedefSayfa, boyut: KATEGORI_URUN_SAYFA_BOYUTU, arama: aramaMetni, kategori,
+      })
+      setKategoriUrunler(sonuc.urunler)
+      setKategoriToplam(sonuc.toplam)
+    } catch (e) {
+      setKategoriUrunHata(e.message)
+      setKategoriUrunler([])
+    } finally {
+      setKategoriUrunYukleniyor(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (seciliKategori) kategoriUrunleriGetir(seciliKategori, kategoriSayfa, kategoriArama)
+  }, [seciliKategori, kategoriSayfa, kategoriArama, kategoriUrunleriGetir])
+
+  const kategoriTopSayfa = Math.max(1, Math.ceil(kategoriToplam / KATEGORI_URUN_SAYFA_BOYUTU))
+
+  const kategoriyaGir = (kategori) => {
+    setSeciliKategori(kategori)
+    setKategoriSayfa(1)
+    setKategoriArama('')
+  }
+
+  const kategoriListesineDon = () => {
+    setSeciliKategori(null)
+    setKategoriUrunler([])
+    setKategoriToplam(0)
+  }
+
+  const handleGorunumDegis = (mod) => {
+    setGorunumModu(mod)
+    if (mod === 'kategori') {
+      setSeciliKategori(null)
+    }
+  }
+
+  // Kategori seçenekleri: sabit liste + tablo görünümünde o an yüklü ürünlerin kategorileri
+  const kategoriSecenekleri = useMemo(() => {
+    const dinamikler = urunler.map((u) => u.category).filter((c) => c && c !== '-')
+    const istatistikten = kategoriIstatistik.map((k) => k.kategori).filter((c) => c && c !== 'Kategorisiz')
+    return Array.from(new Set([...KATEGORILER, ...dinamikler, ...istatistikten])).sort((a, b) => a.localeCompare(b, 'tr'))
+  }, [urunler, kategoriIstatistik])
 
   const handleFile = (secilen) => {
     if (!secilen) return
@@ -244,9 +326,20 @@ export default function Katalog() {
     if (!form.name.trim()) { toast.error('Ürün adı zorunludur'); return false }
     if (!form.price) { toast.error('Fiyat zorunludur'); return false }
     if (!form.urunKodu.trim()) { toast.error('Ürün kodu zorunludur'); return false }
+    if (!form.category.trim()) { toast.error('Kategori zorunludur'); return false }
     if (!form.renk.trim()) { toast.error('Renk zorunludur'); return false }
     if (form.bedenler.length === 0) { toast.error('En az bir beden seçmelisiniz'); return false }
     return true
+  }
+
+  const yenidenYukle = () => {
+    if (gorunumModu === 'tablo') {
+      verileriGetir(sayfa, arama)
+    } else if (seciliKategori) {
+      kategoriUrunleriGetir(seciliKategori, kategoriSayfa, kategoriArama)
+    } else {
+      kategoriIstatistikGetir()
+    }
   }
 
   const handleEkle = async () => {
@@ -256,9 +349,10 @@ export default function Katalog() {
       await urunService.olustur(form, dosya)
       toast.success('Ürün başarıyla eklendi!')
       setModalOpen(false); resetForm()
-      setAramaGirdi('')
       setSayfa(1)
-      await verileriGetir(1, '')
+      if (gorunumModu === 'tablo') await verileriGetir(1, arama)
+      else if (seciliKategori) await kategoriUrunleriGetir(seciliKategori, 1, kategoriArama)
+      else await kategoriIstatistikGetir()
     } catch (e) {
       toast.error(e.message)
     } finally {
@@ -276,7 +370,7 @@ export default function Katalog() {
     setForm({
       name: product.name,
       price: String(product.priceRaw ?? ''),
-      category: KATEGORILER.includes(product.category) ? product.category : KATEGORILER[0],
+      category: product.category === '-' ? KATEGORILER[0] : product.category,
       renk: product.renk === '-' ? '' : product.renk,
       uretici: '',
       bedenler: product.bedenler || [],
@@ -291,14 +385,14 @@ export default function Katalog() {
     setDuzenleModal(true)
   }
 
-   const handleDuzenleKaydet = async () => {
+  const handleDuzenleKaydet = async () => {
     if (!dogrula()) return
     setKaydediyor(true)
     try {
       await urunService.guncelle(seciliUrun.id, form, dosya, seciliUrun.image)
       toast.success('Ürün güncellendi!')
       setDuzenleModal(false); resetForm()
-      await verileriGetir(sayfa, arama)
+      yenidenYukle()
     } catch (e) {
       toast.error(e.message)
     } finally {
@@ -312,10 +406,7 @@ export default function Katalog() {
       await urunService.sil(seciliUrun.id)
       toast.success('Ürün silindi')
       setSilOnayModal(false); setSeciliUrun(null)
-      const sonSayfa = Math.max(1, Math.ceil((toplam - 1) / SAYFA_BOYUTU))
-      const yeniSayfa = Math.min(sayfa, sonSayfa)
-      if (yeniSayfa !== sayfa) setSayfa(yeniSayfa)
-      else await verileriGetir(sayfa, arama)
+      yenidenYukle()
     } catch (e) {
       toast.error(e.message)
     } finally {
@@ -326,7 +417,32 @@ export default function Katalog() {
   const resetForm = () => { setForm(bosForm); setPreview(null); setDosya(null); setSeciliUrun(null) }
   const handleClose = () => { setModalOpen(false); setDuzenleModal(false); setSilOnayModal(false); resetForm() }
 
-  const formProps = { form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor }
+  const handleWhatsappSenkron = async () => {
+    setSenkronEdiliyor(true)
+    try {
+      const sonuc = await urunService.whatsappSenkronEt()
+      if (sonuc.basarili) {
+        toast.success(
+          sonuc.gonderilenSayisi
+            ? `Katalog WhatsApp'a başarıyla gönderildi! (${sonuc.gonderilenSayisi.toLocaleString('tr-TR')} ürün)`
+            : "Katalog WhatsApp'a başarıyla gönderildi!"
+        )
+      } else {
+        toast.error(sonuc.mesaj || 'Senkronizasyon başarısız oldu.')
+      }
+    } catch (e) {
+      toast.error(e.message || 'Senkronizasyon sırasında bir hata oluştu.')
+    } finally {
+      setSenkronEdiliyor(false)
+    }
+  }
+
+  const formProps = { form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor, kategoriSecenekleri }
+
+  const kategoriRenk = (i) => {
+    const paletler = ['#00B4B4', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#EC4899']
+    return paletler[i % paletler.length]
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -335,18 +451,30 @@ export default function Katalog() {
         <div>
           <h1 className="text-2xl font-bold" style={{ color: textPrimary }}>Ürün Bilgileri</h1>
           <p className="text-sm mt-1" style={{ color: textSecondary }}>
-            {yukleniyor
-              ? 'Yükleniyor...'
-              : arama
-                ? `"${arama}" için ${toplam.toLocaleString('tr-TR')} sonuç`
-                : `${toplam.toLocaleString('tr-TR')} ürün kayıtlı`}
+            {gorunumModu === 'tablo'
+              ? (yukleniyor ? 'Yükleniyor...' : `${toplam.toLocaleString('tr-TR')} ürün kayıtlı`)
+              : (seciliKategori ? `${seciliKategori} — ${kategoriToplam.toLocaleString('tr-TR')} ürün` : 'Kategoriye göre gözat')}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => verileriGetir(sayfa, arama)} disabled={yukleniyor}
-            className="p-2 rounded-lg border transition-colors disabled:opacity-40"
+          <div className="flex items-center rounded-lg border overflow-hidden" style={{ borderColor }}>
+            <button onClick={() => handleGorunumDegis('tablo')}
+              className="p-2 transition-colors"
+              style={{ backgroundColor: gorunumModu === 'tablo' ? '#1A1F2E' : inputBg, color: gorunumModu === 'tablo' ? 'white' : textSecondary }}
+              title="Liste görünümü">
+              <LayoutList className="w-4 h-4" />
+            </button>
+            <button onClick={() => handleGorunumDegis('kategori')}
+              className="p-2 transition-colors"
+              style={{ backgroundColor: gorunumModu === 'kategori' ? '#1A1F2E' : inputBg, color: gorunumModu === 'kategori' ? 'white' : textSecondary }}
+              title="Kategori görünümü">
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+          <button onClick={yenidenYukle}
+            className="p-2 rounded-lg border transition-colors"
             style={{ borderColor, color: textSecondary }} title="Yenile">
-            <RefreshCw className={`w-4 h-4 ${yukleniyor ? 'animate-spin' : ''}`} />
+            <RefreshCw className="w-4 h-4" />
           </button>
           <Button onClick={() => setModalOpen(true)}>
             <Plus className="w-4 h-4" /> Yeni Ürün Ekle
@@ -354,179 +482,335 @@ export default function Katalog() {
         </div>
       </div>
 
-      {/* Arama */}
-      <div className="relative max-w-sm">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: textSecondary }} />
-        <input type="text" placeholder="Ürün adı veya kodu ara..." value={aramaGirdi}
-          onChange={(e) => setAramaGirdi(e.target.value)}
-          className="w-full pl-9 pr-9 py-2 text-sm rounded-lg outline-none"
-          style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
-        {aramaGirdi && (
-          <button onClick={() => setAramaGirdi('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded"
-            style={{ color: textSecondary }}>
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+      {/* ============ TABLO GÖRÜNÜMÜ ============ */}
+      {gorunumModu === 'tablo' && (
+        <>
+          <div className="relative max-w-sm">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: textSecondary }} />
+            <input type="text" placeholder="Ürün adı veya kodu ara..." value={aramaGirdi}
+              onChange={(e) => setAramaGirdi(e.target.value)}
+              className="w-full pl-9 pr-9 py-2 text-sm rounded-lg outline-none"
+              style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+            {aramaGirdi && (
+              <button onClick={() => setAramaGirdi('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded" style={{ color: textSecondary }}>
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-      {hata ? (
-        <Card>
-          <div className="flex flex-col items-center gap-3 py-10">
-            <AlertCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
-            <p className="text-sm font-medium" style={{ color: textPrimary }}>Veriler yüklenemedi</p>
-            <p className="text-xs text-center max-w-sm" style={{ color: textSecondary }}>{hata}</p>
-            <Button onClick={() => verileriGetir(sayfa, arama)}>
-              <RefreshCw className="w-4 h-4" /> Tekrar Dene
+          {hata ? (
+            <Card>
+              <div className="flex flex-col items-center gap-3 py-10">
+                <AlertCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
+                <p className="text-sm font-medium" style={{ color: textPrimary }}>Veriler yüklenemedi</p>
+                <p className="text-xs text-center max-w-sm" style={{ color: textSecondary }}>{hata}</p>
+                <Button onClick={() => verileriGetir(sayfa, arama)}>
+                  <RefreshCw className="w-4 h-4" /> Tekrar Dene
+                </Button>
+              </div>
+            </Card>
+          ) : yukleniyor ? (
+            <Card>
+              <div className="flex flex-col items-center gap-3 py-16">
+                <Spinner size="lg" />
+                <p className="text-sm" style={{ color: textSecondary }}>Ürünler yükleniyor...</p>
+              </div>
+            </Card>
+          ) : urunler.length === 0 ? (
+            <EmptyState title="Ürün bulunamadı"
+              description={arama ? 'Bu aramaya uygun ürün yok.' : 'Henüz ürün eklenmemiş.'} />
+          ) : (
+            <Card className="p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b" style={{ backgroundColor: theadBg, borderColor: divider }}>
+                    <tr>
+                      {['Ürün', 'Ürün Kodu', 'Kategori', 'Renk', 'Bedenler', 'Sezon', 'Stok', 'Fiyat', 'Durum', 'İşlem'].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: textSecondary }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {urunler.map((product) => (
+                      <tr key={product.id} className="border-b transition-colors" style={{ borderColor: divider }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHover}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <img src={product.image} alt={product.name}
+                              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                              onError={(e) => { e.currentTarget.style.opacity = '0.3' }} />
+                            <p className="font-medium whitespace-nowrap" style={{ color: textPrimary }}>{product.name}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs font-mono px-2 py-1 rounded"
+                            style={{ backgroundColor: codeBg, color: textSecondary }}>{product.urunKodu}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
+                            style={{ backgroundColor: tagBg, color: textSecondary }}>{product.category}</span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: textSecondary }}>{product.renk}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1 flex-wrap max-w-32">
+                            {product.bedenler.length === 0 ? (
+                              <span className="text-xs" style={{ color: textSecondary }}>-</span>
+                            ) : product.bedenler.map((beden) => (
+                              <span key={beden} className="text-xs px-1.5 py-0.5 rounded"
+                                style={{ backgroundColor: tagBg, color: textSecondary }}>{beden}</span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
+                            style={{ backgroundColor: tagBg, color: textSecondary }}>{product.sezon}</span>
+                        </td>
+                        <td className="px-4 py-3" style={{ color: textSecondary }}>{product.stock}</td>
+                        <td className="px-4 py-3 font-semibold whitespace-nowrap" style={{ color: textPrimary }}>{product.price}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-1 rounded-full font-medium"
+                            style={product.status === 'Aktif'
+                              ? { backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', color: '#10B981' }
+                              : { backgroundColor: tagBg, color: textSecondary }}>{product.status}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => handleDuzenleAc(product)}
+                              className="p-1.5 rounded-lg border transition-colors"
+                              style={{ borderColor, color: textSecondary }}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => { setSeciliUrun(product); setSilOnayModal(true) }}
+                              className="p-1.5 rounded-lg border transition-colors"
+                              style={{ borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA', color: '#EF4444' }}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {toplamSayfa > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t flex-wrap gap-3" style={{ borderColor: divider }}>
+                  <p className="text-xs" style={{ color: textSecondary }}>
+                    Sayfa {sayfa} / {toplamSayfa.toLocaleString('tr-TR')} — toplam {toplam.toLocaleString('tr-TR')} ürün
+                  </p>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <button onClick={() => setSayfa(1)} disabled={sayfa === 1 || yukleniyor}
+                      className="px-2.5 h-8 rounded-lg border text-xs font-medium disabled:opacity-40"
+                      style={{ borderColor, color: textSecondary }}>İlk</button>
+                    <button onClick={() => setSayfa((s) => Math.max(1, s - 1))} disabled={sayfa === 1 || yukleniyor}
+                      className="p-1.5 rounded-lg border disabled:opacity-40" style={{ borderColor, color: textSecondary }}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {sayfaNumaralari(sayfa, toplamSayfa).map((n, i) =>
+                      n === '...' ? (
+                        <span key={`ara-${i}`} className="w-8 h-8 flex items-center justify-center" style={{ color: textSecondary }}>
+                          <MoreHorizontal className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <button key={n} onClick={() => setSayfa(n)} disabled={yukleniyor}
+                          className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
+                          style={n === sayfa
+                            ? { backgroundColor: '#1A1F2E', color: 'white' }
+                            : { color: textSecondary, border: `1px solid ${borderColor}` }}>
+                          {n}
+                        </button>
+                      )
+                    )}
+                    <button onClick={() => setSayfa((s) => Math.min(toplamSayfa, s + 1))}
+                      disabled={sayfa === toplamSayfa || yukleniyor}
+                      className="p-1.5 rounded-lg border disabled:opacity-40" style={{ borderColor, color: textSecondary }}>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setSayfa(toplamSayfa)} disabled={sayfa === toplamSayfa || yukleniyor}
+                      className="px-2.5 h-8 rounded-lg border text-xs font-medium disabled:opacity-40"
+                      style={{ borderColor, color: textSecondary }}>Son</button>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* ============ KATEGORİ GÖRÜNÜMÜ — LİSTE ============ */}
+      {gorunumModu === 'kategori' && !seciliKategori && (
+        <>
+          {kategoriIstatistikHata ? (
+            <Card>
+              <div className="flex flex-col items-center gap-3 py-10">
+                <AlertCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
+                <p className="text-sm font-medium" style={{ color: textPrimary }}>Kategoriler yüklenemedi</p>
+                <p className="text-xs text-center max-w-sm" style={{ color: textSecondary }}>{kategoriIstatistikHata}</p>
+                <Button onClick={kategoriIstatistikGetir}>
+                  <RefreshCw className="w-4 h-4" /> Tekrar Dene
+                </Button>
+              </div>
+            </Card>
+          ) : kategoriIstatistikYukleniyor ? (
+            <Card>
+              <div className="flex flex-col items-center gap-3 py-16">
+                <Spinner size="lg" />
+                <p className="text-sm" style={{ color: textSecondary }}>Kategoriler yükleniyor...</p>
+              </div>
+            </Card>
+          ) : kategoriIstatistik.length === 0 ? (
+            <EmptyState title="Kategori bulunamadı" description="Henüz kategorilendirilmiş ürün yok." />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {kategoriIstatistik.map((k, i) => (
+                <div key={k.kategori} onClick={() => kategoriyaGir(k.kategori)}
+                  className="cursor-pointer transition-all hover:shadow-md">
+                  <Card>
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: `${kategoriRenk(i)}1A` }}>
+                        <Folder className="w-5 h-5" style={{ color: kategoriRenk(i) }} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate" style={{ color: textPrimary }}>{k.kategori}</p>
+                        <p className="text-xs mt-0.5" style={{ color: textSecondary }}>
+                          {k.adet.toLocaleString('tr-TR')} ürün
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ============ KATEGORİ GÖRÜNÜMÜ — SEÇİLİ KATEGORİ ÜRÜNLERİ ============ */}
+      {gorunumModu === 'kategori' && seciliKategori && (
+        <>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <button onClick={kategoriListesineDon}
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors"
+              style={{ borderColor, color: textSecondary }}>
+              <ArrowLeft className="w-4 h-4" /> Kategorilere Dön
+            </button>
+            <Button variant="secondary" onClick={handleWhatsappSenkron} loading={senkronEdiliyor} disabled={senkronEdiliyor}>
+              <Send className="w-4 h-4" /> {senkronEdiliyor ? 'Senkronize Ediliyor...' : "WhatsApp'a Senkronize Et"}
             </Button>
           </div>
-        </Card>
-      ) : yukleniyor ? (
-        <Card>
-          <div className="flex flex-col items-center gap-3 py-16">
-            <Spinner size="lg" />
-            <p className="text-sm" style={{ color: textSecondary }}>Ürünler yükleniyor...</p>
+
+          <div className="relative max-w-sm">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: textSecondary }} />
+            <input type="text" placeholder={`${seciliKategori} içinde ara...`} value={kategoriArama}
+              onChange={(e) => { setKategoriArama(e.target.value); setKategoriSayfa(1) }}
+              className="w-full pl-9 pr-9 py-2 text-sm rounded-lg outline-none"
+              style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+            {kategoriArama && (
+              <button onClick={() => { setKategoriArama(''); setKategoriSayfa(1) }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded" style={{ color: textSecondary }}>
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        </Card>
-      ) : gosterilen.length === 0 ? (
-        <EmptyState title="Ürün bulunamadı"
-          description={arama ? `"${arama}" aramasına uygun ürün yok.` : 'Henüz ürün eklenmemiş.'} />
-      ) : (
-        <Card className="p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b" style={{ backgroundColor: theadBg, borderColor: divider }}>
-                <tr>
-                  {['Ürün', 'Ürün Kodu', 'Üretici', 'Renk', 'Bedenler', 'Sezon', 'Stok', 'Fiyat', 'Durum', 'İşlem'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                      style={{ color: textSecondary }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {gosterilen.map((product) => (
-                  <tr key={product.id} className="border-b transition-colors" style={{ borderColor: divider }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHover}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <img src={product.image} alt={product.name}
-                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                          onError={(e) => { e.currentTarget.style.opacity = '0.3' }} />
-                        <div>
-                          <p className="font-medium whitespace-nowrap" style={{ color: textPrimary }}>{product.name}</p>
-                          <p className="text-xs mt-0.5" style={{ color: textSecondary }}>{product.category}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-mono px-2 py-1 rounded"
-                        style={{ backgroundColor: codeBg, color: textSecondary }}>{product.urunKodu}</span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap" style={{ color: textSecondary }}>{product.uretici}</td>
-                    <td className="px-4 py-3 whitespace-nowrap" style={{ color: textSecondary }}>{product.renk}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1 flex-wrap max-w-32">
-                        {product.bedenler.length === 0 ? (
-                          <span className="text-xs" style={{ color: textSecondary }}>-</span>
-                        ) : product.bedenler.map((beden) => (
-                          <span key={beden} className="text-xs px-1.5 py-0.5 rounded"
-                            style={{ backgroundColor: tagBg, color: textSecondary }}>{beden}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap"
-                        style={{ backgroundColor: tagBg, color: textSecondary }}>{product.sezon}</span>
-                    </td>
-                    <td className="px-4 py-3" style={{ color: textSecondary }}>{product.stock}</td>
-                    <td className="px-4 py-3 font-semibold whitespace-nowrap" style={{ color: textPrimary }}>{product.price}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs px-2 py-1 rounded-full font-medium"
+
+          {kategoriUrunHata ? (
+            <Card>
+              <div className="flex flex-col items-center gap-3 py-10">
+                <AlertCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
+                <p className="text-sm font-medium" style={{ color: textPrimary }}>Ürünler yüklenemedi</p>
+                <p className="text-xs text-center max-w-sm" style={{ color: textSecondary }}>{kategoriUrunHata}</p>
+                <Button onClick={() => kategoriUrunleriGetir(seciliKategori, kategoriSayfa, kategoriArama)}>
+                  <RefreshCw className="w-4 h-4" /> Tekrar Dene
+                </Button>
+              </div>
+            </Card>
+          ) : kategoriUrunYukleniyor ? (
+            <Card>
+              <div className="flex flex-col items-center gap-3 py-16">
+                <Spinner size="lg" />
+                <p className="text-sm" style={{ color: textSecondary }}>Ürünler yükleniyor...</p>
+              </div>
+            </Card>
+          ) : kategoriUrunler.length === 0 ? (
+            <EmptyState title="Ürün bulunamadı"
+              description={kategoriArama ? 'Bu aramaya uygun ürün yok.' : 'Bu kategoride henüz ürün yok.'} />
+          ) : (
+            <Card className="p-0 overflow-hidden">
+              <div className="flex flex-col divide-y" style={{ borderColor: divider }}>
+                {kategoriUrunler.map((product) => (
+                  <div key={product.id} className="flex items-center gap-4 px-4 py-3" style={{ borderColor: divider }}>
+                    <img src={product.image} alt={product.name}
+                      className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                      onError={(e) => { e.currentTarget.style.opacity = '0.3' }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate" style={{ color: textPrimary }}>{product.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: textSecondary }}>
+                        {product.urunKodu} · {product.renk} · {product.sezon}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-semibold" style={{ color: textPrimary }}>{product.price}</p>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium inline-block mt-1"
                         style={product.status === 'Aktif'
                           ? { backgroundColor: isDark ? 'rgba(16,185,129,0.15)' : '#ECFDF5', color: '#10B981' }
                           : { backgroundColor: tagBg, color: textSecondary }}>{product.status}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleDuzenleAc(product)}
-                          className="p-1.5 rounded-lg border transition-colors"
-                          style={{ borderColor, color: textSecondary }}>
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => { setSeciliUrun(product); setSilOnayModal(true) }}
-                          className="p-1.5 rounded-lg border transition-colors"
-                          style={{ borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA', color: '#EF4444' }}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button onClick={() => handleDuzenleAc(product)}
+                        className="p-1.5 rounded-lg border transition-colors" style={{ borderColor, color: textSecondary }}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => { setSeciliUrun(product); setSilOnayModal(true) }}
+                        className="p-1.5 rounded-lg border transition-colors"
+                        style={{ borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA', color: '#EF4444' }}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Sayfalama */}
-          {toplamSayfa > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t flex-wrap gap-3"
-              style={{ borderColor: divider }}>
-              <p className="text-xs" style={{ color: textSecondary }}>
-                Sayfa {sayfa} / {toplamSayfa.toLocaleString('tr-TR')} — toplam {toplam.toLocaleString('tr-TR')} ürün
-              </p>
-
-              <div className="flex items-center gap-1 flex-wrap">
-                <button onClick={() => setSayfa(1)} disabled={sayfa === 1 || yukleniyor}
-                  className="px-2.5 h-8 rounded-lg border text-xs font-medium disabled:opacity-40"
-                  style={{ borderColor, color: textSecondary }}>İlk</button>
-
-                <button onClick={() => setSayfa((s) => Math.max(1, s - 1))} disabled={sayfa === 1 || yukleniyor}
-                  className="p-1.5 rounded-lg border disabled:opacity-40" style={{ borderColor, color: textSecondary }}>
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {sayfaNumaralari(sayfa, toplamSayfa).map((n, i) =>
-                  n === '...' ? (
-                    <span key={`ara-${i}`} className="w-8 h-8 flex items-center justify-center"
-                      style={{ color: textSecondary }}>
-                      <MoreHorizontal className="w-4 h-4" />
-                    </span>
-                  ) : (
-                    <button key={n} onClick={() => setSayfa(n)} disabled={yukleniyor}
-                      className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
-                      style={n === sayfa
-                        ? { backgroundColor: '#1A1F2E', color: 'white' }
-                        : { color: textSecondary, border: `1px solid ${borderColor}` }}>
-                      {n}
-                    </button>
-                  )
-                )}
-
-                <button onClick={() => setSayfa((s) => Math.min(toplamSayfa, s + 1))}
-                  disabled={sayfa === toplamSayfa || yukleniyor}
-                  className="p-1.5 rounded-lg border disabled:opacity-40" style={{ borderColor, color: textSecondary }}>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-
-                <button onClick={() => setSayfa(toplamSayfa)} disabled={sayfa === toplamSayfa || yukleniyor}
-                  className="px-2.5 h-8 rounded-lg border text-xs font-medium disabled:opacity-40"
-                  style={{ borderColor, color: textSecondary }}>Son</button>
-
-                <div className="flex items-center gap-1.5 ml-2">
-                  <input type="number" min="1" max={toplamSayfa} placeholder="Sayfa"
-                    className="w-16 px-2 py-1.5 text-xs rounded-lg outline-none text-center"
-                    style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }}
-                    onKeyDown={(e) => {
-                      if (e.key !== 'Enter') return
-                      const n = parseInt(e.target.value, 10)
-                      if (n >= 1 && n <= toplamSayfa) { setSayfa(n); e.target.value = '' }
-                    }} />
-                  <span className="text-xs" style={{ color: textSecondary }}>↵</span>
-                </div>
               </div>
-            </div>
+
+              {kategoriTopSayfa > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t flex-wrap gap-3" style={{ borderColor: divider }}>
+                  <p className="text-xs" style={{ color: textSecondary }}>
+                    Sayfa {kategoriSayfa} / {kategoriTopSayfa} — toplam {kategoriToplam.toLocaleString('tr-TR')} ürün
+                  </p>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <button onClick={() => setKategoriSayfa((s) => Math.max(1, s - 1))}
+                      disabled={kategoriSayfa === 1 || kategoriUrunYukleniyor}
+                      className="p-1.5 rounded-lg border disabled:opacity-40" style={{ borderColor, color: textSecondary }}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {sayfaNumaralari(kategoriSayfa, kategoriTopSayfa).map((n, i) =>
+                      n === '...' ? (
+                        <span key={`ka-${i}`} className="w-8 h-8 flex items-center justify-center" style={{ color: textSecondary }}>
+                          <MoreHorizontal className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <button key={n} onClick={() => setKategoriSayfa(n)} disabled={kategoriUrunYukleniyor}
+                          className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
+                          style={n === kategoriSayfa
+                            ? { backgroundColor: '#1A1F2E', color: 'white' }
+                            : { color: textSecondary, border: `1px solid ${borderColor}` }}>
+                          {n}
+                        </button>
+                      )
+                    )}
+                    <button onClick={() => setKategoriSayfa((s) => Math.min(kategoriTopSayfa, s + 1))}
+                      disabled={kategoriSayfa === kategoriTopSayfa || kategoriUrunYukleniyor}
+                      className="p-1.5 rounded-lg border disabled:opacity-40" style={{ borderColor, color: textSecondary }}>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </Card>
           )}
-        </Card>
+        </>
       )}
 
       <Modal isOpen={modalOpen} onClose={handleClose} title="Yeni Ürün Ekle">
@@ -543,13 +827,12 @@ export default function Katalog() {
 
       <Modal isOpen={duzenleModal} onClose={handleClose} title="Ürünü Düzenle">
         <div className="flex flex-col gap-4">
-            <Button onClick={handleDuzenleKaydet} loading={kaydediyor} className="flex-1">
-              {kaydediyor ? 'Kaydediliyor...' : 'Kaydet'}
-            </Button>
           <FormIcerigi {...formProps} />
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" onClick={handleClose} className="flex-1">İptal</Button>
-            <Button onClick={handleDuzenleKaydet} className="flex-1">Kaydet</Button>
+            <Button onClick={handleDuzenleKaydet} loading={kaydediyor} className="flex-1">
+              {kaydediyor ? 'Kaydediliyor...' : 'Kaydet'}
+            </Button>
           </div>
         </div>
       </Modal>

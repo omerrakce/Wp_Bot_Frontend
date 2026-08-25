@@ -29,6 +29,7 @@ export default function WhatsAppBaglanti() {
   const [modalOpen, setModalOpen] = useState(false)
   const [kesModal, setKesModal] = useState(false)
   const [telefon, setTelefon] = useState('')
+  const [ulkeKodu, setUlkeKodu] = useState('90')
   const [metaAdim, setMetaAdim] = useState('')
 
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
@@ -66,7 +67,7 @@ export default function WhatsAppBaglanti() {
       await new Promise((r) => setTimeout(r, 900))
       setMetaAdim('Numara bağlanıyor...')
 
-      const sonuc = await whatsappService.baglantiTamamla(sadeceRakam(telefon))
+      const sonuc = await whatsappService.baglantiTamamla(sadeceRakam(telefon), ulkeKodu)
 
       setModalOpen(false)
       setTelefon('')
@@ -152,7 +153,7 @@ export default function WhatsAppBaglanti() {
           <>
             <div className="flex flex-col divide-y" style={{ borderColor: divider }}>
               {[
-                { label: 'Hat Numarası', value: gosterTelefon(durum.telefon) },
+                { label: 'Hat Numarası', value: gosterTelefon(durum.telefon, durum.ulkeKodu) },
                 { label: 'İşletme Adı', value: durum.isletmeAdi || '—' },
                 ...(kalite ? [{ label: 'Hat Kalitesi', value: kalite.metin, renk: kalite.renk }] : []),
               ].map((s) => (
@@ -235,7 +236,8 @@ export default function WhatsAppBaglanti() {
 
           <PhoneInput label="WhatsApp Business Numarası *" value={telefon}
             onChange={setTelefon}
-            hint="Botun çalışacağı hat — müşteriler bu numaraya yazacak" />
+            ulkeKodu={ulkeKodu} onUlkeKoduChange={setUlkeKodu}
+            hint="Önce ülke kodunu seçin, ardından sadece yerel numarayı girin (ülke kodunu tekrar yazmayın)" />
 
           <div className="p-3 rounded-lg" style={{ backgroundColor: subtleBg }}>
             <p className="text-xs font-medium mb-1.5" style={{ color: textPrimary }}>

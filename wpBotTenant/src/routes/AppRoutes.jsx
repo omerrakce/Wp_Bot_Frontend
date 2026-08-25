@@ -13,6 +13,7 @@ import Trendler from '../pages/Trendler'
 import SifreBelirle from '../pages/SifreBelirle'
 import SifreSifirla from '../pages/SifreSifirla'
 import SifremiUnuttum from '../pages/SifremiUnuttum'
+import Kampanyalar from '../pages/Kampanyalar'
 
 // Şimdilik devre dışı — ileride geri açılacak
 // import Sorgular from '../pages/Sorgular'
@@ -37,6 +38,7 @@ export default function AppRoutes() {
           <Route path="ayarlar" element={<Ayarlar />} />
           <Route path="bot" element={<BotAyarlari />} />
           <Route path="trendler" element={<Trendler />} />
+          <Route path="kampanyalar" element={<Kampanyalar />} />
 
           {/* Şimdilik devre dışı
           <Route path="sorgular" element={<Sorgular />} />

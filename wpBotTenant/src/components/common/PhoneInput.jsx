@@ -1,6 +1,5 @@
 import useThemeStore from '../../store/themeStore'
 
-// "5533228433" -> "(553) 322 8433"
 const formatla = (rakamlar) => {
   const d = rakamlar.slice(0, 10)
   if (d.length === 0) return ''
@@ -9,7 +8,6 @@ const formatla = (rakamlar) => {
   return `(${d.slice(0, 3)}) ${d.slice(3, 6)} ${d.slice(6)}`
 }
 
-// Girdiden sadece rakamları alır, baştaki 0 veya 90'ı temizler
 export const sadeceRakam = (deger = '') => {
   let d = String(deger).replace(/\D/g, '')
   if (d.startsWith('90')) d = d.slice(2)
@@ -17,13 +15,20 @@ export const sadeceRakam = (deger = '') => {
   return d.slice(0, 10)
 }
 
-export const gosterTelefon = (deger) => {
+export const gosterTelefon = (deger, ulkeKodu = '90') => {
   const d = sadeceRakam(deger)
-  if (d.length !== 10) return d ? `+90 ${d}` : '-'
-  return `+90 ${d.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2 $3')}`
+  if (d.length !== 10) return d ? `+${ulkeKodu} ${d}` : '-'
+  return `+${ulkeKodu} ${d.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2 $3')}`
 }
 
-export default function PhoneInput({ label, value, onChange, hint }) {
+const ULKE_KODLARI = [
+  { kod: '90', bayrak: '🇹🇷', ad: 'Türkiye' },
+  { kod: '1', bayrak: '🇺🇸', ad: 'ABD' },
+  { kod: '44', bayrak: '🇬🇧', ad: 'İngiltere' },
+  { kod: '49', bayrak: '🇩🇪', ad: 'Almanya' },
+]
+
+export default function PhoneInput({ label, value, onChange, hint, ulkeKodu = '90', onUlkeKoduChange }) {
   const { theme } = useThemeStore()
   const isDark = theme === 'dark'
 
@@ -36,48 +41,39 @@ export default function PhoneInput({ label, value, onChange, hint }) {
   const inputBg = isDark ? '#111827' : 'white'
   const prefixBg = isDark ? '#1F2937' : '#F3F4F6'
 
-  const kenarRengi = bosMu
-    ? (isDark ? '#374151' : '#E5E7EB')
-    : gecerli
-      ? '#10B981'
-      : '#F59E0B'
-
-  const handleChange = (e) => {
-    const yeni = sadeceRakam(e.target.value)
-    onChange(yeni)
-  }
+  const kenarRengi = bosMu ? (isDark ? '#374151' : '#E5E7EB') : gecerli ? '#10B981' : '#F59E0B'
 
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label className="text-sm font-medium" style={{ color: isDark ? '#D1D5DB' : '#374151' }}>
-          {label}
-        </label>
+        <label className="text-sm font-medium" style={{ color: isDark ? '#D1D5DB' : '#374151' }}>{label}</label>
       )}
-      <div className="flex items-stretch rounded-lg overflow-hidden transition-colors"
-        style={{ border: `1px solid ${kenarRengi}` }}>
-        <span className="flex items-center px-3 text-sm font-semibold select-none border-r"
-          style={{ backgroundColor: prefixBg, color: textPrimary, borderColor: kenarRengi }}>
-          +90
-        </span>
+      <div className="flex items-stretch rounded-lg overflow-hidden" style={{ border: `1px solid ${kenarRengi}` }}>
+        {onUlkeKoduChange ? (
+          <select value={ulkeKodu} onChange={(e) => onUlkeKoduChange(e.target.value)}
+            className="px-2 text-sm font-semibold outline-none border-r cursor-pointer"
+            style={{ backgroundColor: prefixBg, color: textPrimary, borderColor: kenarRengi }}>
+            {ULKE_KODLARI.map((u) => (
+              <option key={u.kod} value={u.kod}>{u.bayrak} +{u.kod}</option>
+            ))}
+          </select>
+        ) : (
+          <span className="flex items-center px-3 text-sm font-semibold select-none border-r"
+            style={{ backgroundColor: prefixBg, color: textPrimary, borderColor: kenarRengi }}>+{ulkeKodu}</span>
+        )}
         <input
-          type="tel"
-          inputMode="numeric"
+          type="tel" inputMode="numeric"
           value={formatla(rakamlar)}
-          onChange={handleChange}
+          onChange={(e) => onChange(sadeceRakam(e.target.value))}
           placeholder="(5XX) XXX XXXX"
           className="flex-1 px-3 py-2 text-sm outline-none tracking-wide"
           style={{ backgroundColor: inputBg, color: textPrimary }}
         />
       </div>
       {!bosMu && !gecerli && (
-        <span className="text-xs" style={{ color: '#F59E0B' }}>
-          Numara 10 haneli olmalı — {rakamlar.length}/10
-        </span>
+        <span className="text-xs" style={{ color: '#F59E0B' }}>Numara 10 haneli olmalı — {rakamlar.length}/10</span>
       )}
-      {hint && bosMu && (
-        <span className="text-xs" style={{ color: textSecondary }}>{hint}</span>
-      )}
+      {hint && bosMu && <span className="text-xs" style={{ color: textSecondary }}>{hint}</span>}
     </div>
   )
 }

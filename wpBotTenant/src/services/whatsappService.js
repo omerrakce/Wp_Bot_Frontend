@@ -4,8 +4,9 @@ const yokMu = (e) => e.status === 404 || e.status === 405 || e.status === 0
 
 const durumNormalize = (d = {}) => ({
   bagli: d.bagli ?? d.connected ?? false,
-  durum: d.durum ?? d.status ?? 'baglanmadi',  // baglanmadi | onay_bekliyor | aktif | hata
+  durum: d.durum ?? d.status ?? 'baglanmadi',
   telefon: d.telefon ?? d.display_phone_number ?? '',
+  ulkeKodu: d.ulkeKodu ?? d.country_code ?? '90',
   phoneNumberId: d.phoneNumberId ?? d.wa_phone_number_id ?? null,
   wabaId: d.wabaId ?? d.wa_waba_id ?? null,
   isletmeAdi: d.isletmeAdi ?? d.verified_name ?? '',
@@ -18,10 +19,9 @@ const MOCK_KEY = 'wpbot_wa_mock'
 const AYAR_KEY = 'wpbot_bot_settings'
 
 export const whatsappService = {
- async durumGetir() {
+  async durumGetir() {
     try {
       const veri = await api.get('/api/tenant/whatsapp/status')
-      localStorage.removeItem(MOCK_KEY)   // gerçek uç geldi, mock'a gerek yok
       return { veri: durumNormalize(veri), canli: true }
     } catch (e) {
       if (yokMu(e)) {
@@ -38,12 +38,12 @@ export const whatsappService = {
   },
 
    // Mock akış: Meta ekranı simüle edildikten sonra backend'e bildirilir
-  async baglantiTamamla(telefon) {
-        const govde = {
-      // Gerçek Embedded Signup geldiğinde buraya Meta'dan dönen kod gelecek
+  async baglantiTamamla(telefon, ulkeKodu = '90') {
+    const govde = {
       code: `mock-code-${Date.now()}`,
       mock: true,
       telefon: String(telefon),
+      ulkeKodu: String(ulkeKodu),
     }
     try {
       const veri = await api.post('/api/tenant/whatsapp/connect', govde)
@@ -52,9 +52,8 @@ export const whatsappService = {
     } catch (e) {
       if (!yokMu(e)) throw e
 
-      // Uç henüz yok — yerelde tut
       const yerel = durumNormalize({
-        bagli: true, durum: 'aktif', telefon,
+        bagli: true, durum: 'aktif', telefon, ulkeKodu,
         phoneNumberId: 'mock-' + Date.now(),
         wabaId: 'mock-waba-' + Date.now(),
         isletmeAdi: 'Test İşletmesi',

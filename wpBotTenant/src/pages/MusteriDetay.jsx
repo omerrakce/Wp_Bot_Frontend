@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef  } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { musteriService } from '../services/musteriService'
+import { mesajService } from '../services/mesajService'
 import { urunService } from '../services/urunService'
 import { mockProducts } from '../mocks/mockData'
 import Card from '../components/common/Card'
@@ -9,7 +10,8 @@ import Spinner from '../components/common/Spinner'
 import { gosterTelefon } from '../components/common/PhoneInput'
 import {
   ArrowLeft, ThumbsUp, ThumbsDown, Phone, AlertCircle, RefreshCw,
-  CloudOff, ImageIcon, ShoppingCart, MessageCircle, Search, Star,
+  CloudOff, ImageIcon, ShoppingCart, MessageCircle, Search, Star, ShoppingBag, 
+  MousePointerClick,
 } from 'lucide-react'
 import useThemeStore from '../store/themeStore'
 
@@ -35,16 +37,21 @@ export default function MusteriDetay() {
   const [urunler, setUrunler] = useState([])
   const [olaylar, setOlaylar] = useState([])
   const [olaylarCanli, setOlaylarCanli] = useState(true)
+  const [mesajlar, setMesajlar] = useState([])
+  const [mesajlarCanli, setMesajlarCanli] = useState(true)
   const [yukleniyor, setYukleniyor] = useState(true)
   const [hata, setHata] = useState(null)
   const [canliMi, setCanliMi] = useState(true)
+  const sohbetSonuRef = useRef(null)
 
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
   const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
+  const textTertiary = isDark ? '#6B7280' : '#9CA3AF'
   const divider = isDark ? '#374151' : '#F3F4F6'
   const barBg = isDark ? '#374151' : '#F3F4F6'
   const borderColor = isDark ? '#374151' : '#E5E7EB'
   const subtleBg = isDark ? '#111827' : '#F9FAFB'
+
 
   const verileriGetir = useCallback(async () => {
     setYukleniyor(true)
@@ -68,6 +75,10 @@ export default function MusteriDetay() {
       const zaman = await musteriService.zaman_cizelgesi(id)
       setOlaylar(zaman.olaylar)
       setOlaylarCanli(zaman.canli)
+
+      const mesajSonuc = await mesajService.musteriMesajlari(id)
+      setMesajlar(mesajSonuc.mesajlar)
+      setMesajlarCanli(mesajSonuc.canli)
     } catch (e) {
       setHata(e.message)
     } finally {
@@ -76,6 +87,12 @@ export default function MusteriDetay() {
   }, [id])
 
   useEffect(() => { verileriGetir() }, [verileriGetir])
+
+    useEffect(() => {
+    if (mesajlar.length > 0 && sohbetSonuRef.current) {
+      sohbetSonuRef.current.scrollIntoView({ block: 'nearest' })
+    }
+  }, [mesajlar])
 
   if (yukleniyor) {
     return (
@@ -127,6 +144,25 @@ export default function MusteriDetay() {
       if (farkSaat < 24) return `${farkSaat} saat önce`
       return tarih.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })
     } catch { return '-' }
+  }
+
+  const mesajZamanFormat = (t) => {
+    if (!t) return ''
+    try {
+      return new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    } catch { return '' }
+  }
+
+    const butonEtiketCoz = (icerik) => {
+    if (!icerik) return null
+    if (icerik.startsWith('like_')) return { metin: 'Ürünü beğendi', Icon: ThumbsUp, renk: '#10B981' }
+    if (icerik.startsWith('dislike_')) return { metin: 'Ürünü beğenmedi', Icon: ThumbsDown, renk: '#EF4444' }
+    if (icerik.startsWith('buy_')) return { metin: 'Satın almak istedi', Icon: ShoppingCart, renk: '#00B4B4' }
+    if (icerik === 'CONNECT_AGENT') return { metin: 'Temsilciye bağlanmak istedi', Icon: MessageCircle, renk: '#F59E0B' }
+    if (icerik === 'NEW_SEARCH') return { metin: 'Yeni arama yapmak istedi', Icon: Search, renk: '#3B82F6' }
+    if (icerik === 'button_reply') return { metin: 'Bir seçenek seçti', Icon: MousePointerClick, renk: '#9CA3AF' }
+    if (/^\d{10,}$/.test(icerik)) return { metin: 'Görsel gönderdi', Icon: ImageIcon, renk: '#3B82F6' }
+    return null
   }
 
   const UrunSatiri = ({ urun }) => (
@@ -183,8 +219,7 @@ export default function MusteriDetay() {
         </p>
 
         {!olaylarCanli ? (
-          <div className="flex items-start gap-2.5 p-3 rounded-lg"
-            style={{ backgroundColor: subtleBg }}>
+          <div className="flex items-start gap-2.5 p-3 rounded-lg" style={{ backgroundColor: subtleBg }}>
             <CloudOff className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: textSecondary }} />
             <p className="text-xs" style={{ color: textSecondary }}>
               Etkinlik geçmişi servisi henüz hazır değil. Bot ile ilk etkileşim gerçekleştiğinde
@@ -197,7 +232,7 @@ export default function MusteriDetay() {
             Bu müşteri için henüz kayıtlı etkinlik yok.
           </p>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col max-h-96 overflow-y-auto pr-1">
             {olaylar.map((olay, i) => {
               const Icon = OLAY_IKON[olay.tip] || AlertCircle
               const ilgiliUrun = olay.urunId ? urunBul(olay.urunId) : null
@@ -226,6 +261,95 @@ export default function MusteriDetay() {
                 </div>
               )
             })}
+          </div>
+        )}
+      </Card>
+
+      {/* Sohbet Geçmişi */}
+      <Card>
+        <h2 className="font-semibold mb-1" style={{ color: textPrimary }}>Sohbet Geçmişi</h2>
+        <p className="text-xs mb-4" style={{ color: textSecondary }}>
+          Müşteri ile bot arasındaki WhatsApp mesajları
+        </p>
+
+        {!mesajlarCanli ? (
+          <div className="flex items-start gap-2.5 p-3 rounded-lg" style={{ backgroundColor: subtleBg }}>
+            <CloudOff className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: textSecondary }} />
+            <p className="text-xs" style={{ color: textSecondary }}>
+              Mesaj geçmişi servisi henüz hazır değil.
+            </p>
+          </div>
+        ) : mesajlar.length === 0 ? (
+          <p className="text-sm py-6 text-center" style={{ color: textSecondary }}>
+            Henüz mesaj kaydı yok.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1">
+            {mesajlar.map((m) => {
+              const gelenMi = m.yon === 'in'
+              const hizalanma = gelenMi ? 'flex-start' : 'flex-end'
+              const baloncukBg = gelenMi ? subtleBg : (isDark ? 'rgba(0,180,180,0.15)' : '#E0F7F7')
+              const baloncukRadius = gelenMi ? '12px 12px 12px 2px' : '12px 12px 2px 12px'
+
+              return (
+                <div key={m.id} className="flex flex-col max-w-[75%]" style={{ alignSelf: hizalanma }}>
+                  <div className="px-3 py-2" style={{ backgroundColor: baloncukBg, color: textPrimary, borderRadius: baloncukRadius }}>
+                      {(() => {
+                      if (m.tip === 'image' && m.medyaUrl) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <img src={m.medyaUrl} alt="Gönderilen görsel"
+                              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                              onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                            {m.icerik && !butonEtiketCoz(m.icerik) && <p className="text-sm">{m.icerik}</p>}
+                          </div>
+                        )
+                      }
+                        if (m.tip === 'interactive') {
+                        if (m.interaktif?.type === 'product_list') {
+                          return (
+                            <div className="flex items-center gap-2">
+                              <ShoppingBag className="w-4 h-4 flex-shrink-0" style={{ color: '#00B4B4' }} />
+                              <p className="text-sm">Müşteriye Katalog Ürün Önerisi Gönderildi</p>
+                            </div>
+                          )
+                        }
+                        const butonKodu = m.interaktif?.button_id || m.icerik
+                        const buton = butonEtiketCoz(butonKodu)
+                        if (buton) {
+                          return (
+                            <div className="flex items-center gap-2">
+                              <buton.Icon className="w-4 h-4 flex-shrink-0" style={{ color: buton.renk }} />
+                              <p className="text-sm">{buton.metin}</p>
+                            </div>
+                          )
+                        }
+                        return (
+                          <div className="flex items-center gap-2">
+                            <ShoppingBag className="w-4 h-4 flex-shrink-0" style={{ color: '#00B4B4' }} />
+                            <p className="text-sm">{m.icerik || 'İnteraktif mesaj gönderildi'}</p>
+                          </div>
+                        )
+                      }
+                      const buton = butonEtiketCoz(m.icerik)
+                      if (buton) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <buton.Icon className="w-4 h-4 flex-shrink-0" style={{ color: buton.renk }} />
+                            <p className="text-sm">{buton.metin}</p>
+                          </div>
+                        )
+                      }
+                      return <p className="text-sm whitespace-pre-wrap">{m.icerik || '(boş mesaj)'}</p>
+                    })()}
+                  </div>
+                  <span className="text-xs mt-1 px-1" style={{ color: textTertiary, alignSelf: hizalanma }}>
+                    {gelenMi ? 'Müşteri' : 'Bot'} · {mesajZamanFormat(m.tarih)}
+                  </span>
+                </div>
+              )
+            })}
+            <div ref={sohbetSonuRef} />
           </div>
         )}
       </Card>
