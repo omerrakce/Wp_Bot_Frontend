@@ -1,7 +1,7 @@
 import useThemeStore from '../store/themeStore'
 import useLangStore from '../store/LangStore'
 import { t } from '../i18n'
-import logo from '../assets/HumerSoft-Logo-Variation1-Seffaf.png'
+import logo from '../assets/humersoft-yatay-seffaf.png'
 
 export default function AuthLayout({ children }) {
   const { theme } = useThemeStore()
@@ -10,7 +10,7 @@ export default function AuthLayout({ children }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: isDark ? '#0F172A' : '#F9FAFB' }}>
+      style={{ backgroundColor: isDark ? '#090C14' : '#F9FAFB' }}>
       <div className="w-full max-w-md">
 
         <div className="text-center mb-8">

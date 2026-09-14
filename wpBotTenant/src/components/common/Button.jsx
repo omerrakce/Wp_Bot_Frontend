@@ -2,7 +2,7 @@ import Spinner from './Spinner'
 
 export default function Button({ children, onClick, type = 'button', variant = 'primary', loading = false, disabled = false, className = '' }) {
   const styles = {
-    primary: { backgroundColor: '#1A1F2E', color: 'white' },
+    primary: { backgroundColor: '#090C14', color: 'white' },
     secondary: { backgroundColor: 'white', color: '#374151', border: '1px solid #E5E7EB' },
     danger: { backgroundColor: '#DC2626', color: 'white' },
   }

@@ -75,7 +75,7 @@ export default function SifreBelirle() {
           <p className="text-sm" style={{ color: textSecondary }}>
             Bu davet bağlantısının süresi dolmuş veya daha önce kullanılmış olabilir.
           </p>
-          <Link to="/login" className="text-sm font-medium mt-2" style={{ color: '#00B4B4' }}>
+          <Link to="/login" className="text-sm font-medium mt-2" style={{ color: '#25D366' }}>
             Giriş sayfasına dön
           </Link>
         </div>

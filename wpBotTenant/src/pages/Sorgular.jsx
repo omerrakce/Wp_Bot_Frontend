@@ -33,7 +33,7 @@ export default function Sorgular() {
   const theadBg = isDark ? '#111827' : '#F9FAFB'
   const rowHover = isDark ? '#1F2937' : '#F9FAFB'
   const inputBg = isDark ? '#111827' : 'white'
-  const filterActiveBg = '#1A1F2E'
+  const filterActiveBg = '#090C14'
   const filterInactiveBg = isDark ? '#1F2937' : 'white'
   const filterInactiveBorder = isDark ? '#374151' : '#E5E7EB'
 
@@ -111,7 +111,7 @@ export default function Sorgular() {
           <Card key={item.title} className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: isDark ? '#0D2626' : '#E0F7F7' }}>
-              <item.icon className="w-6 h-6" style={{ color: '#00B4B4' }} />
+              <item.icon className="w-6 h-6" style={{ color: '#25D366' }} />
             </div>
             <div>
               <p className="text-sm" style={{ color: textSecondary }}>{item.title}</p>
@@ -141,7 +141,7 @@ export default function Sorgular() {
               <div key={item.gun} className="flex-1 flex flex-col items-center gap-2">
                 <div className="w-full rounded-t-md relative" style={{ height: '80px', backgroundColor: isDark ? '#374151' : '#F3F4F6' }}>
                   <div className="absolute bottom-0 w-full rounded-t-md" style={{ height: `${yuzde}%`, backgroundColor: isDark ? '#374151' : '#E0F7F7' }} />
-                  <div className="absolute bottom-0 w-full rounded-t-md" style={{ height: `${Math.round(yuzde * sicakYuzde / 100)}%`, backgroundColor: '#00B4B4' }} />
+                  <div className="absolute bottom-0 w-full rounded-t-md" style={{ height: `${Math.round(yuzde * sicakYuzde / 100)}%`, backgroundColor: '#25D366' }} />
                 </div>
                 <span className="text-xs font-medium" style={{ color: textSecondary }}>{item.gun}</span>
                 <span className="text-xs" style={{ color: textTertiary }}>{item.lead} talep</span>
@@ -155,7 +155,7 @@ export default function Sorgular() {
             <span className="text-xs" style={{ color: textSecondary }}>Eşleştirme</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#00B4B4' }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#25D366' }} />
             <span className="text-xs" style={{ color: textSecondary }}>Sıcak Talep</span>
           </div>
         </div>

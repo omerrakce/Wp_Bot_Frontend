@@ -10,11 +10,11 @@ export default function DashboardLayout() {
   const isDark = theme === 'dark'
 
   useEffect(() => {
-    document.body.style.backgroundColor = isDark ? '#0F172A' : '#F9FAFB'
+    document.body.style.backgroundColor = isDark ? '#090C14' : '#F9FAFB'
   }, [isDark])
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: isDark ? '#0F172A' : '#F9FAFB' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: isDark ? '#090C14' : '#F9FAFB' }}>
       <div className="hidden lg:flex lg:w-64 lg:flex-shrink-0">
         <Sidebar isOpen={true} onClose={() => {}} />
       </div>

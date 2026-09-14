@@ -98,7 +98,7 @@ export default function Navbar({ onMenuClick }) {
             <Bell className="w-5 h-5" />
             {okunmamis > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 rounded-full text-white flex items-center justify-center font-medium"
-                style={{ backgroundColor: '#00B4B4', fontSize: '10px' }}>
+                style={{ backgroundColor: '#25D366', fontSize: '10px' }}>
                 {okunmamis}
               </span>
             )}
@@ -143,7 +143,7 @@ export default function Navbar({ onMenuClick }) {
                       borderColor: isDark ? '#374151' : '#F9FAFB',
                     }}>
                     <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-                      style={{ backgroundColor: b.okundu ? (isDark ? '#374151' : '#E5E7EB') : '#00B4B4' }} />
+                      style={{ backgroundColor: b.okundu ? (isDark ? '#374151' : '#E5E7EB') : '#25D366' }} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium" style={{ color: isDark ? '#F9FAFB' : '#1F2937' }}>{b.baslik}</p>
                       <p className="text-xs mt-0.5 leading-relaxed" style={{ color: isDark ? '#6B7280' : '#6B7280' }}>{b.mesaj}</p>
@@ -167,7 +167,7 @@ export default function Navbar({ onMenuClick }) {
         <div className="flex items-center gap-3 ml-1 pl-3 border-l"
           style={{ borderColor: isDark ? '#374151' : '#E5E7EB' }}>
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-            style={{ backgroundColor: '#1A1F2E' }}>
+            style={{ backgroundColor: '#090C14' }}>
             {user?.avatar || 'U'}
           </div>
           <div className="hidden sm:block">

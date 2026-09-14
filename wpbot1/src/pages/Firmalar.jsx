@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminService } from '../services/adminService'
+import { adminService, kullanimSagligi } from '../services/adminService'
 import { PLAN_FIYATLARI } from '../mocks/mockData'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
@@ -130,7 +130,7 @@ export default function Firmalar() {
     .filter((f) => durumFiltre === 'Tümü' || f.status === durumFiltre)
 
   const planStili = (plan) =>
-    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#1A1F2E', color: 'white' } :
+    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#090C14', color: 'white' } :
     plan === 'Pro' ? { backgroundColor: isDark ? '#4B5563' : '#374151', color: 'white' } :
     { backgroundColor: tagBg, color: textSecondary }
 
@@ -267,7 +267,7 @@ export default function Firmalar() {
           <button key={p.key} onClick={() => setAktifPlan(p.key)}
             className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
             style={aktifPlan === p.key
-              ? { backgroundColor: '#1A1F2E', color: 'white' }
+              ? { backgroundColor: '#090C14', color: 'white' }
               : { backgroundColor: inputBg, color: textSecondary, border: `1px solid ${borderColor}` }}>
             {p.label}
           </button>
@@ -277,7 +277,7 @@ export default function Firmalar() {
           <button key={d} onClick={() => setDurumFiltre(d)}
             className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
             style={durumFiltre === d
-              ? { backgroundColor: '#1A1F2E', color: 'white' }
+              ? { backgroundColor: '#090C14', color: 'white' }
               : { backgroundColor: inputBg, color: textSecondary, border: `1px solid ${borderColor}` }}>
             {d}
             {d !== 'Tümü' && (
@@ -325,7 +325,7 @@ export default function Firmalar() {
               <thead className="border-b" style={{ backgroundColor: theadBg, borderColor: divider }}>
                 <tr>
                   {[t(lang, 'firma'), t(lang, 'iletisim'), t(lang, 'urun'), t(lang, 'erisilenMusteri'),
-                    t(lang, 'memnuniyet'), t(lang, 'gorsel'), t(lang, 'durum'), t(lang, 'islem')].map((h) => (
+                  t(lang, 'memnuniyet'), t(lang, 'gorsel'), 'Kullanım', t(lang, 'durum'), t(lang, 'islem')].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wider whitespace-nowrap"
                       style={{ color: textSecondary }}>{h}</th>
                   ))}
@@ -421,11 +421,24 @@ export default function Firmalar() {
                             {firma.gorselGonderilen.toLocaleString('tr-TR')}</span>
                         </p>
                         <p className="text-xs mt-0.5 whitespace-nowrap" style={{ color: textSecondary }}>
-                          {t(lang, 'eslesen')}: <span className="font-medium" style={{ color: '#00B4B4' }}>
+                          {t(lang, 'eslesen')}: <span className="font-medium" style={{ color: '#25D366' }}>
                             {firma.gorselEslesen.toLocaleString('tr-TR')}</span>
                           <span style={{ color: textTertiary }}> (%{eslesme})</span>
                         </p>
                       </td>
+
+                      <td className="px-4 py-3">
+                      {(() => {
+                        const saglik = kullanimSagligi(firma)
+                        return (
+                          <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full font-medium"
+                            style={{ backgroundColor: `${saglik.renk}1A`, color: saglik.renk }}>
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: saglik.renk }} />
+                            {saglik.etiket}
+                          </span>
+                        )
+                      })()}
+                    </td>
 
                       <td className="px-4 py-3">
                         <span className="px-2 py-1 rounded-full text-xs font-medium"
@@ -488,7 +501,7 @@ export default function Firmalar() {
                     <button key={n} onClick={() => setSayfa(n)} disabled={yukleniyor}
                       className="w-8 h-8 rounded-lg text-xs font-medium"
                       style={n === sayfa
-                        ? { backgroundColor: '#1A1F2E', color: 'white' }
+                        ? { backgroundColor: '#090C14', color: 'white' }
                         : { color: textSecondary, border: `1px solid ${borderColor}` }}>{n}</button>
                   )
                 )}
@@ -512,7 +525,7 @@ export default function Firmalar() {
           <FirmaFormu {...formProps} />
           <div className="flex items-start gap-2 p-3 rounded-lg text-xs"
             style={{ backgroundColor: subtleBg, color: textSecondary }}>
-            <KeyRound className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#00B4B4' }} />
+            <KeyRound className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#25D366' }} />
             <p>{t(lang, 'sifreBilgisi')}</p>
           </div>
           <div className="flex gap-3">

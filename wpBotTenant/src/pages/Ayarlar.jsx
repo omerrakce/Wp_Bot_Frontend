@@ -84,14 +84,14 @@ export default function Ayarlar() {
         </h2>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-            style={{ backgroundColor: '#1A1F2E' }}>
+            style={{ backgroundColor: '#090C14' }}>
             {user?.avatar || 'U'}
           </div>
           <div>
             <p className="font-semibold" style={{ color: textPrimary }}>{user?.name}</p>
             <p className="text-sm" style={{ color: textSecondary }}>{user?.role}</p>
             <span className="text-xs px-2 py-0.5 rounded-full mt-1 inline-block font-medium"
-              style={{ backgroundColor: isDark ? 'rgba(0,180,180,0.15)' : '#E0F7F7', color: '#00B4B4' }}>
+              style={{ backgroundColor: isDark ? 'rgba(37,211,102,0.15)' : '#E0F7F7', color: '#25D366' }}>
               {user?.plan} Plan
             </span>
           </div>

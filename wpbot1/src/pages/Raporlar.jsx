@@ -55,7 +55,7 @@ export default function Raporlar() {
   useEffect(() => { verileriGetir(zamanFiltre) }, [zamanFiltre, verileriGetir])
 
   const planStili = (plan) =>
-    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#1A1F2E', color: 'white' } :
+    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#090C14', color: 'white' } :
     plan === 'Pro' ? { backgroundColor: isDark ? '#4B5563' : '#374151', color: 'white' } :
     { backgroundColor: tagBg, color: textSecondary }
 
@@ -120,7 +120,7 @@ export default function Raporlar() {
             <button key={z.value} onClick={() => setZamanFiltre(z.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={zamanFiltre === z.value
-                ? { backgroundColor: '#1A1F2E', color: 'white' }
+                ? { backgroundColor: '#090C14', color: 'white' }
                 : { backgroundColor: inputBg, color: textSecondary, border: `1px solid ${borderColor}` }}>
               {z.label}
             </button>
@@ -192,7 +192,7 @@ export default function Raporlar() {
                       </span>
                       <div className="w-full rounded-t-md relative" style={{ height: '100px', backgroundColor: tagBg }}>
                         <div className="absolute bottom-0 w-full rounded-t-md transition-all"
-                          style={{ height: `${yuzde}%`, backgroundColor: '#00B4B4' }} />
+                          style={{ height: `${yuzde}%`, backgroundColor: '#25D366' }} />
                       </div>
                       <span className="text-xs font-medium" style={{ color: textSecondary }}>{a.ay}</span>
                     </div>
@@ -217,7 +217,7 @@ export default function Raporlar() {
                   </div>
                   <div className="w-full rounded-full h-2" style={{ backgroundColor: tagBg }}>
                     <div className="h-2 rounded-full"
-                      style={{ width: `${yuzde}%`, backgroundColor: item.plan === 'Enterprise' ? '#1A1F2E' : item.plan === 'Pro' ? '#4B5563' : '#9CA3AF' }} />
+                      style={{ width: `${yuzde}%`, backgroundColor: item.plan === 'Enterprise' ? '#090C14' : item.plan === 'Pro' ? '#4B5563' : '#9CA3AF' }} />
                   </div>
                   <p className="text-xs mt-1" style={{ color: textTertiary }}>%{yuzde}</p>
                 </div>
@@ -268,11 +268,11 @@ export default function Raporlar() {
                       <td className="px-5 py-3" style={{ color: textSecondary }}>{f.sepeteYonlendirme.toLocaleString('tr-TR')}</td>
                       <td className="px-5 py-3 w-44">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium" style={{ color: '#00B4B4' }}>{f.gorselEslesen.toLocaleString('tr-TR')}</span>
+                          <span className="text-xs font-medium" style={{ color: '#25D366' }}>{f.gorselEslesen.toLocaleString('tr-TR')}</span>
                           <span className="text-xs" style={{ color: textTertiary }}>%{esl}</span>
                         </div>
                         <div className="w-full rounded-full h-1.5" style={{ backgroundColor: tagBg }}>
-                          <div className="h-1.5 rounded-full" style={{ width: `${esl}%`, backgroundColor: '#00B4B4' }} />
+                          <div className="h-1.5 rounded-full" style={{ width: `${esl}%`, backgroundColor: '#25D366' }} />
                         </div>
                       </td>
                       <td className="px-5 py-3">

@@ -73,7 +73,7 @@ export default function Abonelikler() {
     { backgroundColor: isDark ? 'rgba(245,158,11,0.15)' : '#FFFBEB', color: '#F59E0B' }
 
   const planStili = (plan) =>
-    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#1A1F2E', color: 'white' } :
+    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#090C14', color: 'white' } :
     plan === 'Pro' ? { backgroundColor: isDark ? '#4B5563' : '#374151', color: 'white' } :
     { backgroundColor: tagBg, color: textSecondary }
 
@@ -224,7 +224,7 @@ export default function Abonelikler() {
               <button key={d.key} onClick={() => setDurumFiltre(d.key)}
                 className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
                 style={durumFiltre === d.key
-                  ? { backgroundColor: '#1A1F2E', color: 'white' }
+                  ? { backgroundColor: '#090C14', color: 'white' }
                   : { backgroundColor: inputBg, color: textSecondary, border: `1px solid ${borderColor}` }}>
                 {d.label}
                 {d.key !== 'Tümü' && (
@@ -332,7 +332,7 @@ export default function Abonelikler() {
                         <button key={n} onClick={() => setSayfa(n)} disabled={yukleniyor}
                           className="w-8 h-8 rounded-lg text-xs font-medium"
                           style={n === sayfa
-                            ? { backgroundColor: '#1A1F2E', color: 'white' }
+                            ? { backgroundColor: '#090C14', color: 'white' }
                             : { color: textSecondary, border: `1px solid ${borderColor}` }}>{n}</button>
                       )
                     )}

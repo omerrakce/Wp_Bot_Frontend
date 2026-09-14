@@ -14,6 +14,9 @@ import SifreBelirle from '../pages/SifreBelirle'
 import SifreSifirla from '../pages/SifreSifirla'
 import SifremiUnuttum from '../pages/SifremiUnuttum'
 import Kampanyalar from '../pages/Kampanyalar'
+import BotDurumu from '../pages/BotDurumu'
+
+
 
 // Şimdilik devre dışı — ileride geri açılacak
 // import Sorgular from '../pages/Sorgular'
@@ -37,6 +40,7 @@ export default function AppRoutes() {
           <Route path="firma" element={<FirmaBilgileri />} />
           <Route path="ayarlar" element={<Ayarlar />} />
           <Route path="bot" element={<BotAyarlari />} />
+                    <Route path="bot-durumu" element={<BotDurumu />} />
           <Route path="trendler" element={<Trendler />} />
           <Route path="kampanyalar" element={<Kampanyalar />} />
 

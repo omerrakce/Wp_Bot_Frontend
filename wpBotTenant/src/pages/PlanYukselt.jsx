@@ -91,7 +91,7 @@ export default function PlanYukselt() {
       {/* Mevcut Plan */}
       <div className="flex items-center gap-3 p-4 rounded-xl border w-fit"
         style={{ backgroundColor: cardBg, borderColor: cardBorder }}>
-        <Zap className="w-5 h-5" style={{ color: '#00B4B4' }} />
+        <Zap className="w-5 h-5" style={{ color: '#25D366' }} />
         <div>
           <p className="text-sm" style={{ color: textSecondary }}>Mevcut planınız</p>
           <p className="text-sm font-semibold" style={{ color: textPrimary }}>{user?.plan} Plan</p>
@@ -108,12 +108,12 @@ export default function PlanYukselt() {
               className="relative rounded-2xl overflow-hidden flex flex-col"
               style={{
                 backgroundColor: cardBg,
-                border: `${plan.populer ? '2px' : '1px'} solid ${plan.populer ? '#00B4B4' : cardBorder}`,
+                border: `${plan.populer ? '2px' : '1px'} solid ${plan.populer ? '#25D366' : cardBorder}`,
               }}
             >
               {plan.populer && (
                 <div className="text-center py-1.5 text-xs font-semibold text-white"
-                  style={{ backgroundColor: '#00B4B4' }}>
+                  style={{ backgroundColor: '#25D366' }}>
                   ⭐ En Popüler
                 </div>
               )}
@@ -125,14 +125,14 @@ export default function PlanYukselt() {
                       style={mevcutMu
                         ? { backgroundColor: isDark ? '#374151' : '#F3F4F6', color: textSecondary }
                         : plan.populer
-                          ? { backgroundColor: '#00B4B4', color: 'white' }
-                          : { backgroundColor: isDark ? '#374151' : '#1A1F2E', color: 'white' }
+                          ? { backgroundColor: '#25D366', color: 'white' }
+                          : { backgroundColor: isDark ? '#374151' : '#090C14', color: 'white' }
                       }>
                       {plan.isim}
                     </span>
                     {mevcutMu && (
                       <span className="text-xs font-medium px-2 py-1 rounded-full"
-                        style={{ backgroundColor: isDark ? 'rgba(0,180,180,0.15)' : '#E0F7F7', color: '#00B4B4' }}>
+                        style={{ backgroundColor: isDark ? 'rgba(37,211,102,0.15)' : '#E0F7F7', color: '#25D366' }}>
                         Mevcut Plan
                       </span>
                     )}
@@ -147,7 +147,7 @@ export default function PlanYukselt() {
                 <div className="flex flex-col gap-2.5 flex-1">
                   {plan.ozellikler.map((ozellik) => (
                     <div key={ozellik} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#00B4B4' }} />
+                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#25D366' }} />
                       <span className="text-sm" style={{ color: textSecondary }}>{ozellik}</span>
                     </div>
                   ))}
@@ -160,8 +160,8 @@ export default function PlanYukselt() {
                   style={mevcutMu
                     ? { backgroundColor: isDark ? '#374151' : '#F3F4F6', color: textSecondary }
                     : plan.populer
-                      ? { backgroundColor: '#00B4B4', color: 'white' }
-                      : { backgroundColor: '#1A1F2E', color: 'white' }
+                      ? { backgroundColor: '#25D366', color: 'white' }
+                      : { backgroundColor: '#090C14', color: 'white' }
                   }
                 >
                   {loading === plan.id ? 'İşleniyor...' :

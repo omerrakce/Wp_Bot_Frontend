@@ -34,6 +34,31 @@ export const insightService = {
     }
   },
 
+    async talepler({ limit = 20, offset = 0, status = null } = {}) {
+    const params = new URLSearchParams({ limit, offset })
+    if (status) params.set('status', status)
+    try {
+      const veri = await api.get(`/api/tenant/demands/unmatched?${params}`)
+      const liste = Array.isArray(veri) ? veri : (veri.items ?? [])
+      return {
+        talepler: liste.map((n) => ({ ...noMatchNormalize(n), durum: n.status ?? 'beklemede' })),
+        toplam: veri.total ?? liste.length,
+        canli: true,
+      }
+    } catch (e) {
+      if (yokMu(e)) return { talepler: [], toplam: 0, canli: false }
+      throw e
+    }
+  },
+
+  async talepDurumGuncelle(id, durum) {
+    await api.patch(`/api/tenant/demands/unmatched/${id}/status`, { status: durum })
+  },
+
+  async talepSil(id) {
+    await api.delete(`/api/tenant/demands/unmatched/${id}`)
+  },
+
   async trendUrunler({ periyot = 'ay' } = {}) {
     try {
       const veri = await api.get(`/api/tenant/insights/trending?period=${periyot}`)

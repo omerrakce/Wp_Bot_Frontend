@@ -45,13 +45,13 @@ export default function SifremiUnuttum() {
     return (
       <AuthLayout>
         <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <MailCheck className="w-10 h-10" style={{ color: '#00B4B4' }} />
+          <MailCheck className="w-10 h-10" style={{ color: '#25D366' }} />
           <h2 className="text-lg font-semibold" style={{ color: textPrimary }}>E-postanızı kontrol edin</h2>
           <p className="text-sm" style={{ color: textSecondary }}>
             Bu e-posta adresi kayıtlıysa, şifre sıfırlama bağlantısı gönderildi.
             Bağlantı 1 saat boyunca geçerlidir.
           </p>
-          <Link to="/login" className="text-sm font-medium mt-2 flex items-center gap-1" style={{ color: '#00B4B4' }}>
+          <Link to="/login" className="text-sm font-medium mt-2 flex items-center gap-1" style={{ color: '#25D366' }}>
             <ArrowLeft className="w-3.5 h-3.5" /> Giriş sayfasına dön
           </Link>
         </div>

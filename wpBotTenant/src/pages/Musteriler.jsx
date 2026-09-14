@@ -289,7 +289,7 @@ export default function Musteriler() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                          style={{ backgroundColor: '#1A1F2E' }}>
+                          style={{ backgroundColor: '#090C14' }}>
                           {(sayfa - 1) * SAYFA_BOYUTU + i + 1}
                         </div>
                         <span className="font-medium" style={{ color: textPrimary }}>{musteri.kod}</span>
@@ -364,7 +364,7 @@ export default function Musteriler() {
                     <button key={n} onClick={() => setSayfa(n)} disabled={yukleniyor}
                       className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
                       style={n === sayfa
-                        ? { backgroundColor: '#1A1F2E', color: 'white' }
+                        ? { backgroundColor: '#090C14', color: 'white' }
                         : { color: textSecondary, border: `1px solid ${borderColor}` }}>{n}</button>
                   )
                 )}

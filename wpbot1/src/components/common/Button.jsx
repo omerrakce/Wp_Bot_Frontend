@@ -6,7 +6,7 @@ export default function Button({ children, onClick, type = 'button', variant = '
   const isDark = theme === 'dark'
 
   const styles = {
-    primary: { backgroundColor: '#1A1F2E', color: 'white' },
+    primary: { backgroundColor: '#090C14', color: 'white' },
     secondary: {
       backgroundColor: isDark ? '#1F2937' : 'white',
       color: isDark ? '#D1D5DB' : '#374151',

@@ -7,7 +7,7 @@ import Input from '../components/common/Input'
 import EmptyState from '../components/common/EmptyState'
 import Spinner from '../components/common/Spinner'
 import {
-  Plus, Send, Trash2, Upload, X, RefreshCw, CloudOff,
+  Plus, Send, Trash2, Pencil, Upload, X, RefreshCw, CloudOff,
   AlertCircle, Megaphone, ImageIcon, Users, Calendar,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -18,10 +18,66 @@ const bosForm = { baslik: '', metin: '' }
 const Anahtar = ({ acik, onChange, isDark }) => (
   <button type="button" onClick={onChange}
     className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-    style={{ backgroundColor: acik ? '#00B4B4' : (isDark ? '#374151' : '#E5E7EB') }}>
+    style={{ backgroundColor: acik ? '#25D366' : (isDark ? '#374151' : '#E5E7EB') }}>
     <span className="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
       style={{ left: acik ? '22px' : '4px' }} />
   </button>
+)
+
+const KampanyaFormu = ({ form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor, subtleBg, inputBg, onGorselKaldir }) => (  <div className="flex flex-col gap-4">
+    <Input label="Kampanya Başlığı *" placeholder="örn. Yaz Koleksiyonu %20 İndirim"
+      value={form.baslik} onChange={(e) => setForm((f) => ({ ...f, baslik: e.target.value }))} />
+
+    <div className="flex flex-col gap-1">
+      <label className="text-sm font-medium" style={{ color: isDark ? '#D1D5DB' : '#374151' }}>Kampanya Metni *</label>
+      <textarea rows={4} maxLength={1000}
+        value={form.metin} onChange={(e) => setForm((f) => ({ ...f, metin: e.target.value }))}
+        placeholder="Müşterilere WhatsApp üzerinden gönderilecek mesaj metni..."
+        className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+        style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+      <p className="text-xs mt-0.5" style={{ color: textSecondary }}>{form.metin.length} / 1000 karakter</p>
+    </div>
+
+    <div>
+      <label className="text-sm font-medium block mb-1" style={{ color: textPrimary }}>Kampanya Görseli</label>
+      {preview ? (
+        <div className="flex items-center gap-4">
+          <img src={preview} alt="önizleme" className="w-24 h-24 rounded-lg object-cover border flex-shrink-0"
+            style={{ borderColor }}
+            onError={(e) => { e.currentTarget.style.opacity = '0.3' }} />
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-medium px-3 py-1.5 rounded-lg border cursor-pointer w-fit"
+              style={{ borderColor, color: textSecondary, backgroundColor: subtleBg }}>
+              Görseli Değiştir
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+            </label>
+            <button type="button" onClick={() => { setPreview(null); setDosya(null); if (onGorselKaldir) onGorselKaldir() }}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border w-fit"
+              style={{ borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA', color: '#EF4444' }}>
+              <X className="w-3 h-3" /> Görseli Kaldır
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
+          style={{
+            borderColor: dragOver ? '#25D366' : borderColor,
+            backgroundColor: dragOver ? (isDark ? '#0D2626' : '#F0FDFC') : subtleBg,
+          }}>
+          <Upload className="w-5 h-5 mb-1.5" style={{ color: textSecondary }} />
+          <p className="text-sm" style={{ color: textSecondary }}>
+            Sürükle bırak veya <span className="font-medium" style={{ color: textPrimary }}>dosya seç</span>
+          </p>
+          <p className="text-xs mt-1" style={{ color: textSecondary }}>Opsiyonel — JPG, PNG, WEBP</p>
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+        </label>
+      )}
+    </div>
+  </div>
 )
 
 export default function Kampanyalar() {
@@ -34,6 +90,7 @@ export default function Kampanyalar() {
   const [hata, setHata] = useState(null)
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [duzenleModal, setDuzenleModal] = useState(false)
   const [silOnayModal, setSilOnayModal] = useState(false)
   const [broadcastOnayModal, setBroadcastOnayModal] = useState(false)
   const [seciliKampanya, setSeciliKampanya] = useState(null)
@@ -47,6 +104,7 @@ export default function Kampanyalar() {
   const [siliniyor, setSiliniyor] = useState(false)
   const [gonderiliyor, setGonderiliyor] = useState(false)
   const [degisenId, setDegisenId] = useState(null)
+  const [gorselKaldirildiMi, setGorselKaldirildiMi] = useState(false)
 
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
   const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
@@ -54,7 +112,6 @@ export default function Kampanyalar() {
   const divider = isDark ? '#374151' : '#F3F4F6'
   const borderColor = isDark ? '#374151' : '#E5E7EB'
   const inputBg = isDark ? '#111827' : 'white'
-  const tagBg = isDark ? '#374151' : '#F3F4F6'
   const subtleBg = isDark ? '#111827' : '#F9FAFB'
 
   const verileriGetir = useCallback(async () => {
@@ -81,20 +138,49 @@ export default function Kampanyalar() {
   }
   const handleDrop = (e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }
 
-  const resetForm = () => { setForm(bosForm); setPreview(null); setDosya(null) }
+  const resetForm = () => { setForm(bosForm); setPreview(null); setDosya(null); setGorselKaldirildiMi(false) }
   const handleClose = () => {
-    setModalOpen(false); setSilOnayModal(false); setBroadcastOnayModal(false)
+    setModalOpen(false); setDuzenleModal(false); setSilOnayModal(false); setBroadcastOnayModal(false)
     setSeciliKampanya(null); resetForm()
   }
 
+  const dogrula = () => {
+    if (!form.baslik.trim()) { toast.error('Kampanya başlığı zorunludur'); return false }
+    if (!form.metin.trim()) { toast.error('Kampanya metni zorunludur'); return false }
+    return true
+  }
+
   const handleEkle = async () => {
-    if (!form.baslik.trim()) { toast.error('Kampanya başlığı zorunludur'); return }
-    if (!form.metin.trim()) { toast.error('Kampanya metni zorunludur'); return }
+    if (!dogrula()) return
     setKaydediyor(true)
     try {
       const sonuc = await kampanyaService.olustur(form, dosya)
       toast.success(sonuc.canli ? 'Kampanya oluşturuldu!' : 'Kampanya oluşturuldu (yerel — sunucu hazır değil)')
       setModalOpen(false); resetForm()
+      await verileriGetir()
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setKaydediyor(false)
+    }
+  }
+
+  const handleDuzenleAc = (kampanya) => {
+    setSeciliKampanya(kampanya)
+    setForm({ baslik: kampanya.baslik, metin: kampanya.metin })
+    setPreview(kampanya.gorselUrl || null)
+    setDosya(null)
+    setGorselKaldirildiMi(false)
+    setDuzenleModal(true)
+  }
+
+  const handleDuzenleKaydet = async () => {
+    if (!dogrula()) return
+    setKaydediyor(true)
+    try {
+      const sonuc = await kampanyaService.guncelle(seciliKampanya.id, form, dosya, gorselKaldirildiMi)
+      toast.success(sonuc.canli ? 'Kampanya güncellendi!' : 'Kampanya güncellendi (yerel — sunucu hazır değil)')
+      handleClose()
       await verileriGetir()
     } catch (e) {
       toast.error(e.message)
@@ -133,14 +219,37 @@ export default function Kampanyalar() {
 
   const handleBroadcastOnayla = async () => {
     setGonderiliyor(true)
+    const kampanyaId = seciliKampanya.id
     try {
-      const sonuc = await kampanyaService.broadcastGonder(seciliKampanya.id)
+      const sonuc = await kampanyaService.broadcastGonder(kampanyaId)
+
       if (sonuc.basarili) {
         toast.success(
           sonuc.hedefSayisi
             ? `Kampanya ${sonuc.hedefSayisi.toLocaleString('tr-TR')} müşteriye gönderildi!`
             : 'Kampanya tüm müşterilere gönderildi!'
         )
+        setKampanyalar((prev) => prev.map((k) =>
+          k.id === kampanyaId
+            ? { ...k, gonderimSayisi: sonuc.hedefSayisi, sonGonderimTarihi: new Date().toISOString() }
+            : k
+        ))
+        handleClose()
+        await verileriGetir()
+      } else if (sonuc.basarisizSayisi > 0) {
+        const ilkHatalar = sonuc.hatalar.slice(0, 3).join(' | ')
+        toast.error(
+          `${sonuc.basarisizSayisi} mesaj gönderilemedi${sonuc.hedefSayisi ? ` (${sonuc.hedefSayisi} başarılı)` : ''}.` +
+          (ilkHatalar ? `\n${ilkHatalar}` : ''),
+          { duration: 8000 }
+        )
+        if (sonuc.hedefSayisi > 0) {
+          setKampanyalar((prev) => prev.map((k) =>
+            k.id === kampanyaId
+              ? { ...k, gonderimSayisi: sonuc.hedefSayisi, sonGonderimTarihi: new Date().toISOString() }
+              : k
+          ))
+        }
         handleClose()
         await verileriGetir()
       } else {
@@ -159,7 +268,8 @@ export default function Kampanyalar() {
     catch { return null }
   }
 
-  return (
+  const formProps = { form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor, subtleBg, inputBg, onGorselKaldir: () => setGorselKaldirildiMi(true) }
+    return (
     <div className="flex flex-col gap-6">
 
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -261,6 +371,11 @@ export default function Kampanyalar() {
                     disabled={k.durum !== 'Aktif'}>
                     <Send className="w-3.5 h-3.5" /> Tüm Müşterilere Gönder
                   </Button>
+                  <button onClick={() => handleDuzenleAc(k)}
+                    className="p-2 rounded-lg border transition-colors flex-shrink-0"
+                    style={{ borderColor, color: textSecondary }}>
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   <button onClick={() => { setSeciliKampanya(k); setSilOnayModal(true) }}
                     className="p-2 rounded-lg border transition-colors flex-shrink-0"
                     style={{ borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA', color: '#EF4444' }}>
@@ -276,62 +391,24 @@ export default function Kampanyalar() {
       {/* Yeni Kampanya Modalı */}
       <Modal isOpen={modalOpen} onClose={handleClose} title="Yeni Kampanya">
         <div className="flex flex-col gap-4">
-          <Input label="Kampanya Başlığı *" placeholder="örn. Yaz Koleksiyonu %20 İndirim"
-            value={form.baslik} onChange={(e) => setForm((f) => ({ ...f, baslik: e.target.value }))} />
-
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium" style={{ color: isDark ? '#D1D5DB' : '#374151' }}>Kampanya Metni *</label>
-            <textarea rows={4} maxLength={1000}
-              value={form.metin} onChange={(e) => setForm((f) => ({ ...f, metin: e.target.value }))}
-              placeholder="Müşterilere WhatsApp üzerinden gönderilecek mesaj metni..."
-              className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
-              style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
-            <p className="text-xs mt-0.5" style={{ color: textTertiary }}>{form.metin.length} / 1000 karakter</p>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium block mb-1" style={{ color: textPrimary }}>Kampanya Görseli</label>
-            {preview ? (
-              <div className="flex items-center gap-4">
-                <img src={preview} alt="önizleme" className="w-24 h-24 rounded-lg object-cover border flex-shrink-0"
-                  style={{ borderColor }} />
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-medium px-3 py-1.5 rounded-lg border cursor-pointer w-fit"
-                    style={{ borderColor, color: textSecondary, backgroundColor: subtleBg }}>
-                    Görseli Değiştir
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
-                  </label>
-                  <button type="button" onClick={() => { setPreview(null); setDosya(null) }}
-                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border w-fit"
-                    style={{ borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA', color: '#EF4444' }}>
-                    <X className="w-3 h-3" /> Görseli Kaldır
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <label
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
-                style={{
-                  borderColor: dragOver ? '#00B4B4' : borderColor,
-                  backgroundColor: dragOver ? (isDark ? '#0D2626' : '#F0FDFC') : subtleBg,
-                }}>
-                <Upload className="w-5 h-5 mb-1.5" style={{ color: textSecondary }} />
-                <p className="text-sm" style={{ color: textSecondary }}>
-                  Sürükle bırak veya <span className="font-medium" style={{ color: textPrimary }}>dosya seç</span>
-                </p>
-                <p className="text-xs mt-1" style={{ color: textTertiary }}>Opsiyonel — JPG, PNG, WEBP</p>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
-              </label>
-            )}
-          </div>
-
+          <KampanyaFormu {...formProps} />
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" onClick={handleClose} className="flex-1">İptal</Button>
             <Button onClick={handleEkle} loading={kaydediyor} className="flex-1">
               {kaydediyor ? 'Oluşturuluyor...' : 'Kampanyayı Oluştur'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Kampanya Düzenle Modalı */}
+      <Modal isOpen={duzenleModal} onClose={handleClose} title="Kampanyayı Düzenle">
+        <div className="flex flex-col gap-4">
+          <KampanyaFormu {...formProps} />
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" onClick={handleClose} className="flex-1">İptal</Button>
+            <Button onClick={handleDuzenleKaydet} loading={kaydediyor} className="flex-1">
+              {kaydediyor ? 'Kaydediliyor...' : 'Kaydet'}
             </Button>
           </div>
         </div>

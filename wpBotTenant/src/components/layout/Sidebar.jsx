@@ -1,16 +1,17 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Package, MessageSquare, Settings, X, BarChart2, Zap, TrendingUp, Users, Building2, Megaphone } from 'lucide-react'
+import { LayoutDashboard, Package, MessageSquare, Settings, X, BarChart2, Zap, TrendingUp, Users, Building2, Megaphone, Radio } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
 import useThemeStore from '../../store/themeStore'
 import useLangStore from '../../store/langStore'
 import { t } from '../../i18n'
-import logo from "../../assets/HumerSoft-Logo-Variation1-Seffaf.png";
+import logo from "../../assets/humersoft-yatay-seffaf.png";
 
 const getLinks = (lang) => [
   { to: '/dashboard', icon: LayoutDashboard, label: t(lang, 'dashboard') },
   { to: '/katalog', icon: Package, label: t(lang, 'katalog') },
   { to: '/musteriler', icon: Users, label: t(lang, 'musteriler') },
   { to: '/bot', icon: MessageSquare, label: t(lang, 'botAyarlari') },
+  { to: '/bot-durumu', icon: Radio, label: 'Bot Durumu' },
   { to: '/firma', icon: Building2, label: 'Firma Bilgileri' },
   { to: '/trendler', icon: TrendingUp, label: 'Trendler' },
   { to: '/kampanyalar', icon: Megaphone, label: 'Kampanyalar' },
@@ -24,7 +25,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const isDark = theme === 'dark'
   const links = getLinks(lang)
 
-  const sidebarBg = isDark ? '#0F172A' : '#1A1F2E'
+  const sidebarBg = isDark ? '#090C14' : '#090C14'
   const borderColor = 'rgba(255,255,255,0.08)'
 
   return (
@@ -54,7 +55,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </p>
           <p className="text-sm font-semibold text-white truncate">{user?.company}</p>
           <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium"
-            style={{ backgroundColor: 'rgba(0,180,180,0.15)', color: '#00B4B4' }}>
+            style={{ backgroundColor: 'rgba(37,211,102,0.15)', color: '#25D366' }}>
             {user?.plan}
           </span>
         </div>
@@ -69,7 +70,7 @@ export default function Sidebar({ isOpen, onClose }) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
               style={({ isActive }) =>
                 isActive
-                  ? { backgroundColor: '#00B4B4', color: 'white' }
+                  ? { backgroundColor: '#25D366', color: 'white' }
                   : { color: 'rgba(255,255,255,0.45)' }
               }
             >

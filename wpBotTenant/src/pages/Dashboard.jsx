@@ -172,7 +172,7 @@ export default function Dashboard() {
                 <p className="text-xs mt-0.5" style={{ color: textSecondary }}>Kataloğa en son eklenen kayıtlar</p>
               </div>
               <button onClick={() => navigate('/katalog')}
-                className="flex items-center gap-1 text-xs font-medium" style={{ color: '#00B4B4' }}>
+                className="flex items-center gap-1 text-xs font-medium" style={{ color: '#25D366' }}>
                 Tümü <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -217,7 +217,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold" style={{ color: textPrimary }}>Firma Durumu</h2>
             <button onClick={() => navigate('/firma')}
-              className="text-xs font-medium" style={{ color: '#00B4B4' }}>Düzenle</button>
+              className="text-xs font-medium" style={{ color: '#25D366' }}>Düzenle</button>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -279,7 +279,7 @@ export default function Dashboard() {
                   className="text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5"
                   style={{ backgroundColor: tagBg, color: textSecondary }}>
                   {e.etiket}
-                  <span className="font-semibold" style={{ color: '#00B4B4' }}>{e.adet}</span>
+                  <span className="font-semibold" style={{ color: '#25D366' }}>{e.adet}</span>
                 </span>
               ))}
             </div>
@@ -292,7 +292,7 @@ export default function Dashboard() {
             <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: divider }}>
               <h2 className="font-semibold" style={{ color: textPrimary }}>Müşteriler</h2>
               <button onClick={() => navigate('/musteriler')}
-                className="flex items-center gap-1 text-xs font-medium" style={{ color: '#00B4B4' }}>
+                className="flex items-center gap-1 text-xs font-medium" style={{ color: '#25D366' }}>
                 Tümü <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -308,7 +308,7 @@ export default function Dashboard() {
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = subtleBg}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                      style={{ backgroundColor: '#1A1F2E' }}>
+                      style={{ backgroundColor: '#090C14' }}>
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">

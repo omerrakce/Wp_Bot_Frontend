@@ -105,7 +105,7 @@ const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, s
                 <button key={b} type="button" onClick={() => bedenToggle(b)}
                   className="text-xs px-2.5 py-1 rounded-lg border transition-all"
                   style={secili
-                    ? { backgroundColor: '#00B4B4', color: 'white', borderColor: '#00B4B4' }
+                    ? { backgroundColor: '#25D366', color: 'white', borderColor: '#25D366' }
                     : { backgroundColor: 'transparent', color: textSecondary, borderColor }}>
                   {b}
                 </button>
@@ -141,7 +141,7 @@ const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, s
             onDrop={handleDrop}
             className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
             style={{
-              borderColor: dragOver ? '#00B4B4' : borderColor,
+              borderColor: dragOver ? '#25D366' : borderColor,
               backgroundColor: dragOver ? (isDark ? '#0D2626' : '#F0FDFC') : (isDark ? '#111827' : '#F9FAFB'),
             }}>
             <Upload className="w-6 h-6 mb-2" style={{ color: textSecondary }} />
@@ -440,7 +440,7 @@ export default function Katalog() {
   const formProps = { form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor, kategoriSecenekleri }
 
   const kategoriRenk = (i) => {
-    const paletler = ['#00B4B4', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#EC4899']
+    const paletler = ['#25D366', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#EC4899']
     return paletler[i % paletler.length]
   }
 
@@ -460,13 +460,13 @@ export default function Katalog() {
           <div className="flex items-center rounded-lg border overflow-hidden" style={{ borderColor }}>
             <button onClick={() => handleGorunumDegis('tablo')}
               className="p-2 transition-colors"
-              style={{ backgroundColor: gorunumModu === 'tablo' ? '#1A1F2E' : inputBg, color: gorunumModu === 'tablo' ? 'white' : textSecondary }}
+              style={{ backgroundColor: gorunumModu === 'tablo' ? '#090C14' : inputBg, color: gorunumModu === 'tablo' ? 'white' : textSecondary }}
               title="Liste görünümü">
               <LayoutList className="w-4 h-4" />
             </button>
             <button onClick={() => handleGorunumDegis('kategori')}
               className="p-2 transition-colors"
-              style={{ backgroundColor: gorunumModu === 'kategori' ? '#1A1F2E' : inputBg, color: gorunumModu === 'kategori' ? 'white' : textSecondary }}
+              style={{ backgroundColor: gorunumModu === 'kategori' ? '#090C14' : inputBg, color: gorunumModu === 'kategori' ? 'white' : textSecondary }}
               title="Kategori görünümü">
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -618,7 +618,7 @@ export default function Katalog() {
                         <button key={n} onClick={() => setSayfa(n)} disabled={yukleniyor}
                           className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
                           style={n === sayfa
-                            ? { backgroundColor: '#1A1F2E', color: 'white' }
+                            ? { backgroundColor: '#090C14', color: 'white' }
                             : { color: textSecondary, border: `1px solid ${borderColor}` }}>
                           {n}
                         </button>
@@ -794,7 +794,7 @@ export default function Katalog() {
                         <button key={n} onClick={() => setKategoriSayfa(n)} disabled={kategoriUrunYukleniyor}
                           className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
                           style={n === kategoriSayfa
-                            ? { backgroundColor: '#1A1F2E', color: 'white' }
+                            ? { backgroundColor: '#090C14', color: 'white' }
                             : { color: textSecondary, border: `1px solid ${borderColor}` }}>
                           {n}
                         </button>

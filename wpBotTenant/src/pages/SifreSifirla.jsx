@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import AuthLayout from '../layouts/AuthLayout'
 import Input from '../components/common/Input'
 import Button from '../components/common/Button'
+import Spinner from '../components/common/Spinner'
 import { authService } from '../services/authService'
 import useThemeStore from '../store/themeStore'
 import { XCircle } from 'lucide-react'
@@ -15,6 +16,7 @@ export default function SifreSifirla() {
   const { theme } = useThemeStore()
   const isDark = theme === 'dark'
 
+  const [durum, setDurum] = useState('kontrol') // kontrol | gecerli | gecersiz
   const [sifre, setSifre] = useState('')
   const [sifreTekrar, setSifreTekrar] = useState('')
   const [kaydediyor, setKaydediyor] = useState(false)
@@ -23,22 +25,12 @@ export default function SifreSifirla() {
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
   const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
 
-  if (!token) {
-    return (
-      <AuthLayout>
-        <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <XCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
-          <h2 className="text-lg font-semibold" style={{ color: textPrimary }}>Bağlantı geçersiz</h2>
-          <p className="text-sm" style={{ color: textSecondary }}>
-            Şifre sıfırlama bağlantısı eksik veya hatalı.
-          </p>
-          <Link to="/sifremi-unuttum" className="text-sm font-medium mt-2" style={{ color: '#00B4B4' }}>
-            Yeni bağlantı iste
-          </Link>
-        </div>
-      </AuthLayout>
-    )
-  }
+  useEffect(() => {
+    if (!token) { setDurum('gecersiz'); return }
+    authService.sifreSifirlamaDogrula(token).then((sonuc) => {
+      setDurum(sonuc.gecerli ? 'gecerli' : 'gecersiz')
+    })
+  }, [token])
 
   const handleKaydet = async () => {
     const yeniHatalar = {}
@@ -60,6 +52,34 @@ export default function SifreSifirla() {
   }
 
   const enterIle = (e) => { if (e.key === 'Enter') handleKaydet() }
+
+  if (durum === 'kontrol') {
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center gap-3 py-6">
+          <Spinner size="lg" />
+          <p className="text-sm" style={{ color: textSecondary }}>Bağlantı kontrol ediliyor...</p>
+        </div>
+      </AuthLayout>
+    )
+  }
+
+  if (durum === 'gecersiz') {
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <XCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
+          <h2 className="text-lg font-semibold" style={{ color: textPrimary }}>Bağlantı geçersiz</h2>
+          <p className="text-sm" style={{ color: textSecondary }}>
+            Şifre sıfırlama bağlantısının süresi dolmuş veya daha önce kullanılmış olabilir.
+          </p>
+          <Link to="/sifremi-unuttum" className="text-sm font-medium mt-2" style={{ color: '#25D366' }}>
+            Yeni bağlantı iste
+          </Link>
+        </div>
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout>

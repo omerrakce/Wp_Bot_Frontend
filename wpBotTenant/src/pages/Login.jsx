@@ -77,7 +77,7 @@ export default function Login() {
 
         <div className="flex justify-end -mt-2">
           <Link to="/sifremi-unuttum" className="text-xs font-medium"
-            style={{ color: '#00B4B4' }}>
+            style={{ color: '#25D366' }}>
             Şifremi unuttum
           </Link>
         </div>

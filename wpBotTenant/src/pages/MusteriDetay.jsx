@@ -157,7 +157,7 @@ export default function MusteriDetay() {
     if (!icerik) return null
     if (icerik.startsWith('like_')) return { metin: 'Ürünü beğendi', Icon: ThumbsUp, renk: '#10B981' }
     if (icerik.startsWith('dislike_')) return { metin: 'Ürünü beğenmedi', Icon: ThumbsDown, renk: '#EF4444' }
-    if (icerik.startsWith('buy_')) return { metin: 'Satın almak istedi', Icon: ShoppingCart, renk: '#00B4B4' }
+    if (icerik.startsWith('buy_')) return { metin: 'Satın almak istedi', Icon: ShoppingCart, renk: '#25D366' }
     if (icerik === 'CONNECT_AGENT') return { metin: 'Temsilciye bağlanmak istedi', Icon: MessageCircle, renk: '#F59E0B' }
     if (icerik === 'NEW_SEARCH') return { metin: 'Yeni arama yapmak istedi', Icon: Search, renk: '#3B82F6' }
     if (icerik === 'button_reply') return { metin: 'Bir seçenek seçti', Icon: MousePointerClick, renk: '#9CA3AF' }
@@ -288,7 +288,7 @@ export default function MusteriDetay() {
             {mesajlar.map((m) => {
               const gelenMi = m.yon === 'in'
               const hizalanma = gelenMi ? 'flex-start' : 'flex-end'
-              const baloncukBg = gelenMi ? subtleBg : (isDark ? 'rgba(0,180,180,0.15)' : '#E0F7F7')
+              const baloncukBg = gelenMi ? subtleBg : (isDark ? 'rgba(37,211,102,0.15)' : '#E0F7F7')
               const baloncukRadius = gelenMi ? '12px 12px 12px 2px' : '12px 12px 2px 12px'
 
               return (
@@ -309,7 +309,7 @@ export default function MusteriDetay() {
                         if (m.interaktif?.type === 'product_list') {
                           return (
                             <div className="flex items-center gap-2">
-                              <ShoppingBag className="w-4 h-4 flex-shrink-0" style={{ color: '#00B4B4' }} />
+                              <ShoppingBag className="w-4 h-4 flex-shrink-0" style={{ color: '#25D366' }} />
                               <p className="text-sm">Müşteriye Katalog Ürün Önerisi Gönderildi</p>
                             </div>
                           )
@@ -326,7 +326,7 @@ export default function MusteriDetay() {
                         }
                         return (
                           <div className="flex items-center gap-2">
-                            <ShoppingBag className="w-4 h-4 flex-shrink-0" style={{ color: '#00B4B4' }} />
+                            <ShoppingBag className="w-4 h-4 flex-shrink-0" style={{ color: '#25D366' }} />
                             <p className="text-sm">{m.icerik || 'İnteraktif mesaj gönderildi'}</p>
                           </div>
                         )
@@ -374,7 +374,7 @@ export default function MusteriDetay() {
                 </div>
                 <div className="w-full rounded-full h-2" style={{ backgroundColor: barBg }}>
                   <div className="h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${v.skor}%`, backgroundColor: '#00B4B4' }} />
+                    style={{ width: `${v.skor}%`, backgroundColor: '#25D366' }} />
                 </div>
               </div>
             ))}

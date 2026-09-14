@@ -29,6 +29,14 @@ const firmaNormalize = (f = {}) => ({
   gorselGonderilen: f.gorselGonderilen ?? 0,
   gorselEslesen: f.gorselEslesen ?? 0,
 
+  // Kullanım sağlığı sinyalleri — henüz backend'de olmayabilir, güvenli varsayılanlarla
+  whatsappBagli: f.whatsappBagli ?? f.wa_connected ?? null,           // null = bilinmiyor
+  whatsappNumara: sadeceRakam(f.whatsappNumara ?? f.wa_phone_number ?? ''),
+  sonKatalogSenkronu: f.sonKatalogSenkronu ?? f.last_catalog_sync_at ?? null,
+  kampanyaSayisi: f.kampanyaSayisi ?? f.campaign_count ?? null,
+  toplamBroadcastGonderim: f.toplamBroadcastGonderim ?? f.total_broadcast_sent ?? null,
+  mesajSayisi30Gun: f.mesajSayisi30Gun ?? f.message_count_30d ?? null,
+
   joinDate: f.joinDate ?? f.created_at ?? null,
   abonelik: f.abonelik ?? null,
   davet: f.davet ?? null,
@@ -232,4 +240,80 @@ export const adminService = {
       toplam: Array.isArray(veri) ? veri.length : (veri.total ?? 0),
     }
   },
+
+    // ---- Firma bazlı detay görüntüleme (superadmin salt-okunur erişim) ----
+
+  async tenantUrunleri(tenantId, { sayfa = 1, boyut = 20, arama = '' } = {}) {
+    const params = new URLSearchParams({ page: sayfa, page_size: boyut })
+    if (arama.trim()) params.set('search', arama.trim())
+    const veri = await api.get(`/api/admin/tenants/${tenantId}/products?${params}`)
+    const liste = Array.isArray(veri) ? veri : (veri.items ?? [])
+    return {
+      urunler: liste.map((u) => ({
+        id: u.id,
+        name: u.name || 'İsimsiz Ürün',
+        image: u.image || '',
+        price: u.price ?? 0,
+        category: u.category || '-',
+        renk: u.renk || '-',
+        urunKodu: u.urunKodu || '-',
+        stock: u.stock ?? 0,
+        status: u.status || 'Aktif',
+      })),
+      toplam: Array.isArray(veri) ? veri.length : (veri.total ?? 0),
+    }
+  },
+
+  async tenantMusterileri(tenantId, { sayfa = 1, boyut = 20, arama = '' } = {}) {
+    const params = new URLSearchParams({ page: sayfa, page_size: boyut })
+    if (arama.trim()) params.set('search', arama.trim())
+    const veri = await api.get(`/api/admin/tenants/${tenantId}/customers?${params}`)
+    const liste = Array.isArray(veri) ? veri : (veri.items ?? [])
+    return {
+      musteriler: liste.map((m) => ({
+        id: m.id,
+        kod: m.kod ?? `MŞT-${String(m.id).slice(0, 6)}`,
+        telefon: sadeceRakam(m.telefon ?? ''),
+        begeni: m.begeni ?? 0,
+        begenmeme: m.begenmeme ?? 0,
+        vektorEtiketleri: Array.isArray(m.vektorEtiketleri) ? m.vektorEtiketleri : [],
+      })),
+      toplam: Array.isArray(veri) ? veri.length : (veri.total ?? 0),
+    }
+  },
+
+  async tenantMusteriMesajlari(tenantId, musteriId) {
+    const veri = await api.get(`/api/admin/tenants/${tenantId}/customers/${musteriId}/messages`)
+    const liste = Array.isArray(veri) ? veri : (veri.items ?? [])
+    return liste.map((m) => ({
+      id: m.id,
+      yon: m.direction ?? 'in',
+      tip: m.type ?? 'text',
+      icerik: m.content ?? '',
+      medyaUrl: m.media_url ?? null,
+      interaktif: m.interactive ?? null,
+      tarih: m.created_at ?? null,
+    }))
+  },
+
+}
+
+// Firmanın botu gerçekten kullanıp kullanmadığını tek bir sinyalde özetler.
+// Backend verisi eksikse (null) belirsiz sayar, yanlış alarm vermez.
+export const kullanimSagligi = (firma) => {
+  const { whatsappBagli, sonKatalogSenkronu, mesajSayisi30Gun } = firma
+
+  if (whatsappBagli === null && mesajSayisi30Gun === null) {
+    return { seviye: 'bilinmiyor', etiket: 'Veri yok', renk: '#9CA3AF' }
+  }
+  if (whatsappBagli === false) {
+    return { seviye: 'pasif', etiket: 'WhatsApp bağlı değil', renk: '#EF4444' }
+  }
+  if (mesajSayisi30Gun === 0) {
+    return { seviye: 'pasif', etiket: 'Son 30 gün mesaj yok', renk: '#EF4444' }
+  }
+  if (!sonKatalogSenkronu || (mesajSayisi30Gun !== null && mesajSayisi30Gun < 10)) {
+    return { seviye: 'kismi', etiket: 'Kısmen aktif', renk: '#F59E0B' }
+  }
+  return { seviye: 'aktif', etiket: 'Aktif kullanıyor', renk: '#10B981' }
 }

@@ -47,7 +47,7 @@ const TezgahtarFormu = ({ form, setForm, preview, setPreview, setDosya, dragOver
           onDrop={handleDrop}
           className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
           style={{
-            borderColor: dragOver ? '#00B4B4' : borderColor,
+            borderColor: dragOver ? '#25D366' : borderColor,
             backgroundColor: dragOver ? (isDark ? '#0D2626' : '#F0FDFC') : subtleBg,
           }}>
           <Upload className="w-5 h-5 mb-1.5" style={{ color: textSecondary }} />
@@ -314,7 +314,7 @@ export default function FirmaBilgileri() {
           </h2>
           <button onClick={toggleTezgahtar}
             className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0"
-            style={{ backgroundColor: firma.tezgahtarAktif ? '#00B4B4' : (isDark ? '#374151' : '#E5E7EB') }}>
+            style={{ backgroundColor: firma.tezgahtarAktif ? '#25D366' : (isDark ? '#374151' : '#E5E7EB') }}>
             <span className="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
               style={{ left: firma.tezgahtarAktif ? '26px' : '4px' }} />
           </button>
@@ -389,12 +389,12 @@ export default function FirmaBilgileri() {
               backgroundColor: isDark ? '#0D2626' : '#F0FDFC',
               borderColor: isDark ? '#134E4A' : '#99F6E4',
             }}>
-            <ExternalLink className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#00B4B4' }} />
+            <ExternalLink className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#25D366' }} />
             <div className="min-w-0">
               <p className="text-sm font-medium" style={{ color: textPrimary }}>Online yönlendirme aktif</p>
               <p className="text-xs mt-1 break-all" style={{ color: textSecondary }}>
                 Müşteriler temsilci yerine sepet linkine yönlendirilir:{' '}
-                <span className="font-medium" style={{ color: '#00B4B4' }}>{firma.sepetLinki || '—'}</span>
+                <span className="font-medium" style={{ color: '#25D366' }}>{firma.sepetLinki || '—'}</span>
               </p>
             </div>
           </div>

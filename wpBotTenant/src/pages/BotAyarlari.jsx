@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Spinner from '../components/common/Spinner'
-import WhatsAppBaglanti from '../components/WhatsAppBaglanti'
 import { whatsappService } from '../services/whatsappService'
+import { botSettingsService } from '../services/botSettingsService'
 import {
-  MessageSquare, Clock, Zap, Search, Sparkles,
+  MessageSquare, Clock, Zap, Search, Sparkles, HelpCircle,
   AlertCircle, RefreshCw, CloudOff, Info,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -14,7 +14,7 @@ import useThemeStore from '../store/themeStore'
 const Anahtar = ({ acik, onChange, isDark }) => (
   <button onClick={onChange}
     className="relative w-12 h-6 rounded-full transition-colors flex-shrink-0"
-    style={{ backgroundColor: acik ? '#00B4B4' : (isDark ? '#374151' : '#E5E7EB') }}>
+    style={{ backgroundColor: acik ? '#25D366' : (isDark ? '#374151' : '#E5E7EB') }}>
     <span className="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all"
       style={{ left: acik ? '26px' : '4px' }} />
   </button>
@@ -29,6 +29,11 @@ export default function BotAyarlari() {
   const [kaydediyor, setKaydediyor] = useState(false)
   const [hata, setHata] = useState(null)
   const [canli, setCanli] = useState(true)
+
+  const [faq, setFaq] = useState({ faqKargo: '', faqIade: '', faqBeden: '' })
+  const [faqYukleniyor, setFaqYukleniyor] = useState(true)
+  const [faqKaydediyor, setFaqKaydediyor] = useState(false)
+  const [faqCanli, setFaqCanli] = useState(true)
 
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
   const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
@@ -52,7 +57,21 @@ export default function BotAyarlari() {
     }
   }, [])
 
+  const faqGetir = useCallback(async () => {
+    setFaqYukleniyor(true)
+    try {
+      const sonuc = await botSettingsService.getir()
+      setFaq(sonuc.veri)
+      setFaqCanli(sonuc.canli)
+    } catch {
+      // FAQ opsiyonel bir özellik, sessizce boş bırak
+    } finally {
+      setFaqYukleniyor(false)
+    }
+  }, [])
+
   useEffect(() => { verileriGetir() }, [verileriGetir])
+  useEffect(() => { faqGetir() }, [faqGetir])
 
   const handleKaydet = async () => {
     if (!ayar.karsilamaMesaji.trim()) {
@@ -69,6 +88,20 @@ export default function BotAyarlari() {
       toast.error(e.message)
     } finally {
       setKaydediyor(false)
+    }
+  }
+
+  const handleFaqKaydet = async () => {
+    setFaqKaydediyor(true)
+    try {
+      const sonuc = await botSettingsService.kaydet(faq)
+      setFaq(sonuc.veri)
+      setFaqCanli(sonuc.canli)
+      toast.success(sonuc.canli ? 'Sık sorulan sorular kaydedildi!' : 'Kaydedildi (sunucu hazır değil, yerel)')
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setFaqKaydediyor(false)
     }
   }
 
@@ -127,7 +160,7 @@ export default function BotAyarlari() {
         <div>
           <h1 className="text-2xl font-bold" style={{ color: textPrimary }}>Bot Ayarları</h1>
           <p className="text-sm mt-1" style={{ color: textSecondary }}>
-            WhatsApp asistanınızın davranışını yapılandırın
+            WhatsApp asistanınızın mesajlarını ve davranışını yapılandırın
           </p>
         </div>
         <button onClick={verileriGetir}
@@ -136,9 +169,6 @@ export default function BotAyarlari() {
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
-
-      {/* WhatsApp bağlantısı */}
-      <WhatsAppBaglanti />
 
       {!canli && (
         <div className="flex items-start gap-2.5 p-3 rounded-xl border"
@@ -218,11 +248,73 @@ export default function BotAyarlari() {
                 style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }}
                 placeholder="Şu an kapalıyız, en kısa sürede döneceğiz."
               />
-                <p className="text-xs mt-1" style={{ color: textTertiary }}>
+              <p className="text-xs mt-1" style={{ color: textTertiary }}>
                 Boş bırakırsanız bot mesai dışında da normal şekilde yanıt vermeye devam eder.
               </p>
             </div>
           </div>
+        )}
+      </Card>
+
+      {/* Sık Sorulan Sorular */}
+      <Card>
+        <h2 className="font-semibold mb-1 flex items-center gap-2" style={{ color: textPrimary }}>
+          <HelpCircle className="w-4 h-4" style={{ color: textSecondary }} /> Sık Sorulan Sorular
+        </h2>
+        <p className="text-xs mb-4" style={{ color: textSecondary }}>
+          Müşteri bu konularda soru sorduğunda bot otomatik olarak bu cevapları verir
+        </p>
+
+        {faqYukleniyor ? (
+          <div className="flex items-center gap-2 py-4">
+            <Spinner size="sm" />
+            <p className="text-xs" style={{ color: textSecondary }}>Yükleniyor...</p>
+          </div>
+        ) : (
+          <>
+            {!faqCanli && (
+              <div className="flex items-start gap-2 p-2.5 rounded-lg mb-3"
+                style={{ backgroundColor: subtleBg }}>
+                <CloudOff className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: textSecondary }} />
+                <p className="text-xs" style={{ color: textSecondary }}>
+                  Bu özellik henüz sunucuda hazır değil, değişiklikler yerelde tutuluyor.
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium" style={{ color: textPrimary }}>Kargo Sorulduğunda</label>
+                <textarea rows={2} maxLength={500}
+                  value={faq.faqKargo} onChange={(e) => setFaq((f) => ({ ...f, faqKargo: e.target.value }))}
+                  placeholder="Kargolarımız 1-3 iş günü içinde teslim edilir."
+                  className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                  style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium" style={{ color: textPrimary }}>İade Sorulduğunda</label>
+                <textarea rows={2} maxLength={500}
+                  value={faq.faqIade} onChange={(e) => setFaq((f) => ({ ...f, faqIade: e.target.value }))}
+                  placeholder="14 gün içerisinde koşulsuz iade edebilirsiniz."
+                  className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                  style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium" style={{ color: textPrimary }}>Beden Sorulduğunda</label>
+                <textarea rows={2} maxLength={500}
+                  value={faq.faqBeden} onChange={(e) => setFaq((f) => ({ ...f, faqBeden: e.target.value }))}
+                  placeholder="Ürünlerimiz tam kalıptır, kendi bedeninizi tercih edebilirsiniz."
+                  className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                  style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Button onClick={handleFaqKaydet} loading={faqKaydediyor}>
+                {faqKaydediyor ? 'Kaydediliyor...' : 'Sık Sorulan Soruları Kaydet'}
+              </Button>
+            </div>
+          </>
         )}
       </Card>
 
@@ -240,7 +332,7 @@ export default function BotAyarlari() {
               <div className="flex items-start gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: subtleBg }}>
-                  <o.icon className="w-4 h-4" style={{ color: ayar[o.key] ? '#00B4B4' : textSecondary }} />
+                  <o.icon className="w-4 h-4" style={{ color: ayar[o.key] ? '#25D366' : textSecondary }} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium" style={{ color: textPrimary }}>{o.baslik}</p>

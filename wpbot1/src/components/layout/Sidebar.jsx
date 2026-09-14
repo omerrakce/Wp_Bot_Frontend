@@ -3,7 +3,7 @@ import { LayoutDashboard, Building2, BarChart2, CreditCard, Settings, X } from '
 import useThemeStore from '../../store/themeStore'
 import useLangStore from '../../store/LangStore'
 import { t } from '../../i18n'
-import logo from '../../assets/HumerSoft-Logo-Variation1-Seffaf.png'
+import logo from '../../assets/humersoft-yatay-seffaf.png'
 
 export default function Sidebar({ isOpen, onClose }) {
   const { theme } = useThemeStore()
@@ -18,7 +18,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { to: '/ayarlar', icon: Settings, label: t(lang, 'ayarlar') },
   ]
 
-  const sidebarBg = isDark ? '#0F172A' : '#1A1F2E'
+  const sidebarBg = isDark ? '#090C14' : '#090C14'
   const borderColor = 'rgba(255,255,255,0.08)'
 
   return (
@@ -51,7 +51,7 @@ export default function Sidebar({ isOpen, onClose }) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
               style={({ isActive }) =>
                 isActive
-                  ? { backgroundColor: '#00B4B4', color: 'white' }
+                  ? { backgroundColor: '#25D366', color: 'white' }
                   : { color: 'rgba(255,255,255,0.45)' }
               }
             >

@@ -43,9 +43,18 @@ export const authService = {
     return !!tokenAl()
   },
 
-    async davetDogrula(token) {
+  async davetDogrula(token) {
     try {
       const veri = await api.get(`/api/auth/verify-invite-token?token=${encodeURIComponent(token)}`, { yetkisiz: true })
+      return { gecerli: true, email: veri.email ?? null }
+    } catch {
+      return { gecerli: false, email: null }
+    }
+  },
+
+  async sifreSifirlamaDogrula(token) {
+    try {
+      const veri = await api.get(`/api/auth/verify-reset-token/${encodeURIComponent(token)}`, { yetkisiz: true })
       return { gecerli: true, email: veri.email ?? null }
     } catch {
       return { gecerli: false, email: null }
@@ -61,7 +70,7 @@ export const authService = {
   },
 
   async sifreSifirla(token, sifre) {
-    await api.post('/api/auth/reset-password', { token, password: sifre }, { yetkisiz: true })
+    await api.post('/api/auth/reset-password', { token, new_password: sifre }, { yetkisiz: true })
   },
   async sifreDegistir(mevcutSifre, yeniSifre) {
     await api.post('/api/auth/change-password', {

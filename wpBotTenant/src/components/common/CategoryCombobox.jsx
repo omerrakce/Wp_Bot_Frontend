@@ -59,14 +59,14 @@ export default function CategoryCombobox({ label, value, onChange, options }) {
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBg}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                 {o}
-                {value === o && <Check className="w-3.5 h-3.5" style={{ color: '#00B4B4' }} />}
+                {value === o && <Check className="w-3.5 h-3.5" style={{ color: '#25D366' }} />}
               </button>
             ))}
 
             {yeniEklenebilir && (
               <button type="button" onClick={() => sec(arama.trim())}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left border-t"
-                style={{ color: '#00B4B4', borderColor }}
+                style={{ color: '#25D366', borderColor }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBg}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                 <Plus className="w-3.5 h-3.5" /> "{arama.trim()}" kategorisini oluştur

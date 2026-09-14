@@ -23,13 +23,13 @@ const apidenGelen = (m = {}) => ({
 
 const OLAY_ETIKET = {
   image_received: { baslik: 'Görsel gönderdi', renk: '#3B82F6' },
-  match_shown: { baslik: 'Ürün önerildi', renk: '#00B4B4' },
+  match_shown: { baslik: 'Ürün önerildi', renk: '#25D366' },
   product_liked: { baslik: 'Ürünü beğendi', renk: '#10B981' },
   product_disliked: { baslik: 'Ürünü beğenmedi', renk: '#EF4444' },
   cart_redirect: { baslik: 'Satın almaya yönlendi', renk: '#8B5CF6' },
   agent_connect: { baslik: 'Temsilciye bağlandı', renk: '#F59E0B' },
   similar_search: { baslik: 'Benzer ürün aradı', renk: '#3B82F6' },
-  rating_given: { baslik: 'Değerlendirme yaptı', renk: '#00B4B4' },
+  rating_given: { baslik: 'Değerlendirme yaptı', renk: '#25D366' },
   no_match: { baslik: 'Eşleşme bulunamadı', renk: '#9CA3AF' },
 }
 

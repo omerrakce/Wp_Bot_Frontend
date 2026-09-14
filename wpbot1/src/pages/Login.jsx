@@ -74,7 +74,7 @@ export default function Login() {
 
         <div className="flex items-center gap-2 p-2.5 rounded-lg"
           style={{ backgroundColor: subtleBg }}>
-          <ShieldCheck className="w-4 h-4 flex-shrink-0" style={{ color: '#00B4B4' }} />
+          <ShieldCheck className="w-4 h-4 flex-shrink-0" style={{ color: '#25D366' }} />
           <p className="text-xs" style={{ color: textSecondary }}>
             Bu panel yalnızca süper admin hesaplarına açıktır.
           </p>
@@ -89,7 +89,7 @@ export default function Login() {
 
         <div className="flex justify-end -mt-2">
           <Link to="/sifremi-unuttum" className="text-xs font-medium"
-            style={{ color: '#00B4B4' }}>
+            style={{ color: '#25D366' }}>
             Şifremi unuttum
           </Link>
         </div>

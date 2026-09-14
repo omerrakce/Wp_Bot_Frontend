@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminService } from '../services/adminService'
+import { adminService, kullanimSagligi } from '../services/adminService'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Spinner from '../components/common/Spinner'
 import {
   Building2, Users, ImageIcon, Smile, ArrowRight,
-  AlertCircle, RefreshCw,
+  AlertCircle, RefreshCw, AlertTriangle
 } from 'lucide-react'
 import useAuthStore from '../store/authStore'
 import useThemeStore from '../store/themeStore'
@@ -103,12 +103,14 @@ export default function Dashboard() {
   ]
 
   const planStili = (plan) =>
-    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#1A1F2E', color: 'white' } :
+    plan === 'Enterprise' ? { backgroundColor: isDark ? '#374151' : '#090C14', color: 'white' } :
     plan === 'Pro' ? { backgroundColor: isDark ? '#4B5563' : '#374151', color: 'white' } :
     { backgroundColor: tagBg, color: textSecondary }
 
   const oran = (f) => f.degerlendirmeSayisi
     ? Math.round((f.memnunSayisi / f.degerlendirmeSayisi) * 100) : 0
+
+  const pasifFirmalar = firmalar.filter((f) => kullanimSagligi(f).seviye === 'pasif')
 
   return (
     <div className="flex flex-col gap-6">
@@ -146,6 +148,25 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {pasifFirmalar.length > 0 && (
+        <div onClick={() => navigate('/firmalar')}
+          className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border flex-wrap cursor-pointer transition-colors"
+          style={{
+            backgroundColor: isDark ? 'rgba(245,158,11,0.06)' : '#FFFBEB',
+            borderColor: isDark ? 'rgba(245,158,11,0.2)' : '#FDE68A',
+          }}>
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: '#F59E0B' }} />
+            <p className="text-sm" style={{ color: textPrimary }}>
+              <span className="font-semibold">{pasifFirmalar.length} firma</span> botu aktif kullanmıyor
+            </p>
+          </div>
+          <span className="text-xs font-medium flex items-center gap-1 flex-shrink-0" style={{ color: '#F59E0B' }}>
+            İncele <ArrowRight className="w-3 h-3" />
+          </span>
+        </div>
+      )}
+      
       {/* Firma tablosu */}
       <Card className="p-0 overflow-hidden">
         <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: divider }}>
@@ -154,7 +175,7 @@ export default function Dashboard() {
             <p className="text-xs mt-0.5" style={{ color: textSecondary }}>{t(lang, 'platformOzet')}</p>
           </div>
           <button onClick={() => navigate('/firmalar')}
-            className="flex items-center gap-1 text-xs font-medium" style={{ color: '#00B4B4' }}>
+            className="flex items-center gap-1 text-xs font-medium" style={{ color: '#25D366' }}>
             {t(lang, 'tumunuGor')} <ArrowRight className="w-3 h-3" />
           </button>
         </div>
@@ -191,7 +212,7 @@ export default function Dashboard() {
                     <td className="px-5 py-3" style={{ color: textSecondary }}>{f.musteriToplam.toLocaleString('tr-TR')}</td>
                     <td className="px-5 py-3" style={{ color: textSecondary }}>{f.sepeteYonlendirme.toLocaleString('tr-TR')}</td>
                     <td className="px-5 py-3">
-                      <span className="font-medium" style={{ color: '#00B4B4' }}>
+                      <span className="font-medium" style={{ color: '#25D366' }}>
                         {f.gorselEslesen.toLocaleString('tr-TR')}
                       </span>
                     </td>

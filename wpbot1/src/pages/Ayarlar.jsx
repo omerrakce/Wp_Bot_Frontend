@@ -90,7 +90,7 @@ export default function Ayarlar() {
         </h2>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-            style={{ backgroundColor: '#1A1F2E' }}>
+            style={{ backgroundColor: '#090C14' }}>
             {user?.avatar || 'U'}
           </div>
           <div>

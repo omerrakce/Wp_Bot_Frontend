@@ -16,7 +16,7 @@ export default function PrivateRoute() {
   if (!hazir) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3"
-        style={{ backgroundColor: isDark ? '#0F172A' : '#F9FAFB' }}>
+        style={{ backgroundColor: isDark ? '#090C14' : '#F9FAFB' }}>
         <Spinner size="lg" />
         <p className="text-sm" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
           Oturum doğrulanıyor...

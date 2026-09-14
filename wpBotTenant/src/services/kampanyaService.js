@@ -74,6 +74,34 @@ export const kampanyaService = {
     }
   },
 
+  async guncelle(id, form, dosya, gorselKaldirildiMi) {
+    const fd = new FormData()
+    fd.append('title', form.baslik.trim())
+    fd.append('text', form.metin.trim())
+    if (dosya) {
+      fd.append('image', dosya)
+    } else if (gorselKaldirildiMi) {
+      fd.append('remove_image', 'true')
+    }
+
+    try {
+      const veri = await api.put(`/api/campaigns/${id}`, fd)
+      return { veri: kampanyaNormalize(veri), canli: true }
+    } catch (e) {
+      if (!yokMu(e)) throw e
+      const liste = mockOku()
+      const guncellenmis = liste.map((k) => {
+        if (k.id !== id) return k
+        let image_url = k.image_url
+        if (dosya) image_url = URL.createObjectURL(dosya)
+        else if (gorselKaldirildiMi) image_url = ''
+        return { ...k, title: form.baslik.trim(), text: form.metin.trim(), image_url }
+      })
+      mockYaz(guncellenmis)
+      return { veri: kampanyaNormalize(guncellenmis.find((k) => k.id === id)), canli: false }
+    }
+  },
+
   async durumDegistir(id, yeniDurum) {
     try {
       const veri = await api.patch(`/api/campaigns/${id}`, { durum: yeniDurum })
@@ -102,8 +130,10 @@ export const kampanyaService = {
   async broadcastGonder(id) {
     const veri = await api.post(`/api/campaigns/${id}/broadcast`)
     return {
-      basarili: veri.success ?? veri.basarili ?? true,
-      hedefSayisi: veri.target_count ?? veri.hedefSayisi ?? null,
+      basarili: veri.success ?? veri.basarili ?? false,
+      hedefSayisi: veri.target_count ?? veri.hedefSayisi ?? 0,
+      basarisizSayisi: veri.failed_count ?? veri.basarisizSayisi ?? 0,
+      hatalar: veri.errors ?? veri.hatalar ?? [],
       mesaj: veri.message ?? veri.mesaj ?? null,
     }
   },

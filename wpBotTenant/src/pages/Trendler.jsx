@@ -106,7 +106,7 @@ export default function Trendler() {
             <button key={p.key} onClick={() => setPeriyot(p.key)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={periyot === p.key
-                ? { backgroundColor: '#1A1F2E', color: 'white' }
+                ? { backgroundColor: '#090C14', color: 'white' }
                 : { backgroundColor: subtleBg, color: textSecondary, border: `1px solid ${borderColor}` }}>
               {p.label}
             </button>
@@ -166,8 +166,8 @@ export default function Trendler() {
             </Card>
             <Card className="flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: isDark ? 'rgba(0,180,180,0.15)' : '#E0F7F7' }}>
-                <TrendingUp className="w-5 h-5" style={{ color: '#00B4B4' }} />
+                style={{ backgroundColor: isDark ? 'rgba(37,211,102,0.15)' : '#E0F7F7' }}>
+                <TrendingUp className="w-5 h-5" style={{ color: '#25D366' }} />
               </div>
               <div>
                 <p className="text-xs" style={{ color: textSecondary }}>Trend Ürün Sayısı</p>
@@ -256,7 +256,7 @@ export default function Trendler() {
                       <p className="text-xs mt-0.5" style={{ color: textSecondary }}>{t.urun.urunKodu}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold" style={{ color: '#00B4B4' }}>{t.gosterim} gösterim</p>
+                      <p className="text-sm font-semibold" style={{ color: '#25D366' }}>{t.gosterim} gösterim</p>
                       <p className="text-xs mt-0.5" style={{ color: textSecondary }}>{t.begeni} beğeni</p>
                     </div>
                   </div>
