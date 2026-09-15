@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { KATEGORILER, SEZONLAR, RENK_ONERILERI, BEDEN_GRUPLARI } from '../mocks/mockData'
+import { KATEGORILER, SEZONLAR, BEDEN_GRUPLARI } from '../mocks/mockData'
 import { urunService } from '../services/urunService'
 import Button from '../components/common/Button'
 import Modal from '../components/common/Modal'
@@ -11,13 +11,22 @@ import Spinner from '../components/common/Spinner'
 import {
   Plus, Upload, X, Search, Pencil, Trash2,
   ChevronLeft, ChevronRight, AlertCircle, RefreshCw, MoreHorizontal,
-  LayoutList, LayoutGrid, ArrowLeft, Send, Folder,
+  LayoutList, LayoutGrid, ArrowLeft, Send, Folder, ArrowUpDown,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useThemeStore from '../store/themeStore'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const SAYFA_BOYUTU = 20
 const KATEGORI_URUN_SAYFA_BOYUTU = 20
+
+const SIRALAMA_SECENEKLERI = [
+  { deger: '', etiket: 'Varsayılan' },
+  { deger: 'newest', etiket: 'En Yeni' },
+  { deger: 'oldest', etiket: 'En Eski' },
+  { deger: 'price_asc', etiket: 'Fiyat: Düşükten Yükseğe' },
+  { deger: 'price_desc', etiket: 'Fiyat: Yüksekten Düşüğe' },
+]
 
 const bosForm = {
   name: '', price: '', category: KATEGORILER[0], renk: '',
@@ -61,25 +70,19 @@ const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, s
         <CategoryCombobox label="Kategori *" value={form.category}
           onChange={(v) => setForm((f) => ({ ...f, category: v }))}
           options={kategoriSecenekleri} />
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" style={{ color: isDark ? '#D1D5DB' : '#374151' }}>Renk *</label>
-          <input list="renk-onerileri" value={form.renk}
-            onChange={(e) => setForm((f) => ({ ...f, renk: e.target.value }))}
-            placeholder="örn. Bordo, Çiçek Desen..."
-            className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-            style={{ backgroundColor: isDark ? '#111827' : 'white', border: `1px solid ${borderColor}`, color: textPrimary }} />
-          <datalist id="renk-onerileri">
-            {RENK_ONERILERI.map((r) => <option key={r} value={r} />)}
-          </datalist>
-        </div>
+        <Input label="Renk *" placeholder="örn. Bordo, Çiçek Desen..." value={form.renk}
+          onChange={(e) => setForm((f) => ({ ...f, renk: e.target.value }))} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Input label="Ürün Kodu *" placeholder="örn. ELB-1001" value={form.urunKodu}
-          onChange={(e) => setForm((f) => ({ ...f, urunKodu: e.target.value.toUpperCase() }))} />
+          onChange={(e) => setForm((f) => ({ ...f, urunKodu: e.target.value.toLocaleUpperCase('tr-TR') }))} />
         <Input label="Stok Adedi" placeholder="örn. 50" value={form.stock}
           onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value.replace(/\D/g, '') }))} />
       </div>
+
+      <Input label="Üretici (opsiyonel)" placeholder="örn. Modaline Tekstil" value={form.uretici}
+        onChange={(e) => setForm((f) => ({ ...f, uretici: e.target.value }))} />
 
       <div className="grid grid-cols-2 gap-3">
         <Secim label="Sezon" value={form.sezon}
@@ -142,7 +145,7 @@ const FormIcerigi = ({ form, setForm, preview, setPreview, setDosya, dragOver, s
             className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
             style={{
               borderColor: dragOver ? '#25D366' : borderColor,
-              backgroundColor: dragOver ? (isDark ? '#0D2626' : '#F0FDFC') : (isDark ? '#111827' : '#F9FAFB'),
+              backgroundColor: dragOver ? (isDark ? '#0D2620' : '#F0FDF4') : (isDark ? '#111827' : '#F9FAFB'),
             }}>
             <Upload className="w-6 h-6 mb-2" style={{ color: textSecondary }} />
             <p className="text-sm" style={{ color: textSecondary }}>
@@ -165,6 +168,8 @@ const sayfaNumaralari = (mevcut, toplam) => {
 }
 
 export default function Katalog() {
+  const location = useLocation()
+  const navigate = useNavigate()
   const { theme } = useThemeStore()
   const isDark = theme === 'dark'
 
@@ -177,6 +182,8 @@ export default function Katalog() {
 
   const [arama, setArama] = useState('')
   const [aramaGirdi, setAramaGirdi] = useState('')
+  const [sirala, setSirala] = useState('')
+  const [durumFiltre, setDurumFiltre] = useState('')
   const [gorunumModu, setGorunumModu] = useState('tablo') // 'tablo' | 'kategori'
 
   // Kategori görünümü state'i
@@ -200,7 +207,6 @@ export default function Katalog() {
   const [preview, setPreview] = useState(null)
   const [dosya, setDosya] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const [senkronEdiliyor, setSenkronEdiliyor] = useState(false)
 
   const textPrimary = isDark ? '#F9FAFB' : '#111827'
   const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
@@ -214,11 +220,13 @@ export default function Katalog() {
   const subtleBg = isDark ? '#111827' : '#F9FAFB'
 
   // --- Tablo görünümü veri çekme ---
-  const verileriGetir = useCallback(async (hedefSayfa, aramaMetni) => {
+  const verileriGetir = useCallback(async (hedefSayfa, aramaMetni, siralamaDegeri, durumDegeri) => {
     setYukleniyor(true)
     setHata(null)
     try {
-      const sonuc = await urunService.listele({ sayfa: hedefSayfa, boyut: SAYFA_BOYUTU, arama: aramaMetni })
+      const sonuc = await urunService.listele({
+        sayfa: hedefSayfa, boyut: SAYFA_BOYUTU, arama: aramaMetni, sirala: siralamaDegeri, durum: durumDegeri,
+      })
       setUrunler(sonuc.urunler)
       setToplam(sonuc.toplam)
     } catch (e) {
@@ -238,8 +246,16 @@ export default function Katalog() {
   }, [aramaGirdi])
 
   useEffect(() => {
-    if (gorunumModu === 'tablo') verileriGetir(sayfa, arama)
-  }, [sayfa, arama, gorunumModu, verileriGetir])
+    if (gorunumModu === 'tablo') verileriGetir(sayfa, arama, sirala, durumFiltre)
+  }, [sayfa, arama, sirala, durumFiltre, gorunumModu, verileriGetir])
+
+    useEffect(() => {
+    if (location.state?.onerilenAd) {
+      setForm((f) => ({ ...f, name: location.state.onerilenAd }))
+      setModalOpen(true)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state, location.pathname, navigate])
 
   const toplamSayfa = Math.max(1, Math.ceil(toplam / SAYFA_BOYUTU))
 
@@ -322,19 +338,21 @@ export default function Katalog() {
 
   const handleDrop = (e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }
 
-  const dogrula = () => {
-    if (!form.name.trim()) { toast.error('Ürün adı zorunludur'); return false }
-    if (!form.price) { toast.error('Fiyat zorunludur'); return false }
-    if (!form.urunKodu.trim()) { toast.error('Ürün kodu zorunludur'); return false }
-    if (!form.category.trim()) { toast.error('Kategori zorunludur'); return false }
-    if (!form.renk.trim()) { toast.error('Renk zorunludur'); return false }
-    if (form.bedenler.length === 0) { toast.error('En az bir beden seçmelisiniz'); return false }
+  const dogrula = (dosyaVarMi) => {
+    if (!dosyaVarMi) { toast.error('Önce görsel seç'); return false }
+    if (!form.name.trim() || !form.category.trim() || !form.renk.trim() || !form.urunKodu.trim()) {
+      toast.error('Zorunlu alanları (*) doldur'); return false
+    }
+    if (form.bedenler.length === 0) { toast.error('En az 1 beden seç'); return false }
+    if (!form.price || isNaN(Number(form.price.replace(',', '.')))) {
+      toast.error('Fiyat geçerli bir sayı olmalı'); return false
+    }
     return true
   }
 
   const yenidenYukle = () => {
     if (gorunumModu === 'tablo') {
-      verileriGetir(sayfa, arama)
+      verileriGetir(sayfa, arama, sirala, durumFiltre)
     } else if (seciliKategori) {
       kategoriUrunleriGetir(seciliKategori, kategoriSayfa, kategoriArama)
     } else {
@@ -343,14 +361,14 @@ export default function Katalog() {
   }
 
   const handleEkle = async () => {
-    if (!dogrula()) return
+    if (!dogrula(!!dosya)) return
     setKaydediyor(true)
     try {
       await urunService.olustur(form, dosya)
       toast.success('Ürün başarıyla eklendi!')
       setModalOpen(false); resetForm()
       setSayfa(1)
-      if (gorunumModu === 'tablo') await verileriGetir(1, arama)
+      if (gorunumModu === 'tablo') await verileriGetir(1, arama, sirala, durumFiltre)
       else if (seciliKategori) await kategoriUrunleriGetir(seciliKategori, 1, kategoriArama)
       else await kategoriIstatistikGetir()
     } catch (e) {
@@ -372,7 +390,7 @@ export default function Katalog() {
       price: String(product.priceRaw ?? ''),
       category: product.category === '-' ? KATEGORILER[0] : product.category,
       renk: product.renk === '-' ? '' : product.renk,
-      uretici: '',
+      uretici: product.uretici || '',
       bedenler: product.bedenler || [],
       bedenGrubu: bedenGrubuBul(product.bedenler),
       urunKodu: product.urunKodu === '-' ? '' : product.urunKodu,
@@ -386,7 +404,7 @@ export default function Katalog() {
   }
 
   const handleDuzenleKaydet = async () => {
-    if (!dogrula()) return
+    if (!dogrula(!!(dosya || preview))) return
     setKaydediyor(true)
     try {
       await urunService.guncelle(seciliUrun.id, form, dosya, seciliUrun.image)
@@ -437,12 +455,16 @@ export default function Katalog() {
     }
   }
 
+  const [senkronEdiliyor, setSenkronEdiliyor] = useState(false)
+
   const formProps = { form, setForm, preview, setPreview, setDosya, dragOver, setDragOver, handleFile, handleDrop, isDark, textPrimary, textSecondary, borderColor, kategoriSecenekleri }
 
   const kategoriRenk = (i) => {
-    const paletler = ['#25D366', '#3B82F6', '#8B5CF6', '#F59E0B', '#10B981', '#EC4899']
+    const paletler = ['#25D366', '#00C398', '#0AC0C8', '#F59E0B', '#8B5CF6', '#EC4899']
     return paletler[i % paletler.length]
   }
+
+  const aktifFiltreSayisi = (sirala ? 1 : 0) + (durumFiltre ? 1 : 0)
 
   return (
     <div className="flex flex-col gap-6">
@@ -485,16 +507,48 @@ export default function Katalog() {
       {/* ============ TABLO GÖRÜNÜMÜ ============ */}
       {gorunumModu === 'tablo' && (
         <>
-          <div className="relative max-w-sm">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: textSecondary }} />
-            <input type="text" placeholder="Ürün adı veya kodu ara..." value={aramaGirdi}
-              onChange={(e) => setAramaGirdi(e.target.value)}
-              className="w-full pl-9 pr-9 py-2 text-sm rounded-lg outline-none"
-              style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
-            {aramaGirdi && (
-              <button onClick={() => setAramaGirdi('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded" style={{ color: textSecondary }}>
-                <X className="w-4 h-4" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative max-w-sm flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: textSecondary }} />
+              <input type="text" placeholder="Ürün adı veya kodu ara..." value={aramaGirdi}
+                onChange={(e) => setAramaGirdi(e.target.value)}
+                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg outline-none"
+                style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }} />
+              {aramaGirdi && (
+                <button onClick={() => setAramaGirdi('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded" style={{ color: textSecondary }}>
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative">
+              <ArrowUpDown className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: textSecondary }} />
+              <select value={sirala} onChange={(e) => { setSirala(e.target.value); setSayfa(1) }}
+                className="pl-7 pr-3 py-2 rounded-lg text-sm outline-none appearance-none cursor-pointer"
+                style={{ backgroundColor: inputBg, border: `1px solid ${borderColor}`, color: textPrimary }}>
+                {SIRALAMA_SECENEKLERI.map((s) => (
+                  <option key={s.deger} value={s.deger}>{s.etiket}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center rounded-lg border overflow-hidden" style={{ borderColor }}>
+              {[{ v: '', l: 'Tümü' }, { v: 'Aktif', l: 'Aktif' }, { v: 'Pasif', l: 'Pasif' }].map((d) => (
+                <button key={d.v} onClick={() => { setDurumFiltre(d.v); setSayfa(1) }}
+                  className="px-3 py-2 text-sm font-medium transition-colors"
+                  style={durumFiltre === d.v
+                    ? { backgroundColor: '#090C14', color: 'white' }
+                    : { backgroundColor: inputBg, color: textSecondary }}>
+                  {d.l}
+                </button>
+              ))}
+            </div>
+
+            {aktifFiltreSayisi > 0 && (
+              <button onClick={() => { setSirala(''); setDurumFiltre(''); setSayfa(1) }}
+                className="text-xs font-medium px-2" style={{ color: textSecondary }}>
+                Filtreleri temizle
               </button>
             )}
           </div>
@@ -505,7 +559,7 @@ export default function Katalog() {
                 <AlertCircle className="w-10 h-10" style={{ color: '#EF4444' }} />
                 <p className="text-sm font-medium" style={{ color: textPrimary }}>Veriler yüklenemedi</p>
                 <p className="text-xs text-center max-w-sm" style={{ color: textSecondary }}>{hata}</p>
-                <Button onClick={() => verileriGetir(sayfa, arama)}>
+                <Button onClick={() => verileriGetir(sayfa, arama, sirala, durumFiltre)}>
                   <RefreshCw className="w-4 h-4" /> Tekrar Dene
                 </Button>
               </div>
@@ -519,7 +573,7 @@ export default function Katalog() {
             </Card>
           ) : urunler.length === 0 ? (
             <EmptyState title="Ürün bulunamadı"
-              description={arama ? 'Bu aramaya uygun ürün yok.' : 'Henüz ürün eklenmemiş.'} />
+              description={arama || aktifFiltreSayisi > 0 ? 'Bu kritere uygun ürün yok.' : 'Henüz ürün eklenmemiş.'} />
           ) : (
             <Card className="p-0 overflow-hidden">
               <div className="overflow-x-auto">
@@ -665,7 +719,7 @@ export default function Katalog() {
             <EmptyState title="Kategori bulunamadı" description="Henüz kategorilendirilmiş ürün yok." />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {kategoriIstatistik.map((k, i) => (
+              {kategoriIstatistik.map((k, i) => (
                 <div key={k.kategori} onClick={() => kategoriyaGir(k.kategori)}
                   className="cursor-pointer transition-all hover:shadow-md">
                   <Card>

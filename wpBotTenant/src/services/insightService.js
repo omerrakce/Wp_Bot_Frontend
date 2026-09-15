@@ -41,7 +41,7 @@ export const insightService = {
       const veri = await api.get(`/api/tenant/demands/unmatched?${params}`)
       const liste = Array.isArray(veri) ? veri : (veri.items ?? [])
       return {
-        talepler: liste.map((n) => ({ ...noMatchNormalize(n), durum: n.status ?? 'beklemede' })),
+        talepler: liste.map((n) => ({ ...noMatchNormalize(n), durum: n.status ?? 'pending' })),
         toplam: veri.total ?? liste.length,
         canli: true,
       }

@@ -31,7 +31,7 @@ export default function AppRoutes() {
         <Route path="/sifre-sifirla" element={<SifreSifirla />} />
         <Route path="/reset-password" element={<Navigate to={`/sifre-sifirla${window.location.search}`} replace />} />
         <Route path="/sifremi-unuttum" element={<SifremiUnuttum />} />
-      <Route path="/" element={<PrivateRoute />}>
+        <Route path="/" element={<PrivateRoute />}>
         <Route element={<DashboardLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />

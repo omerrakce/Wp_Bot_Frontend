@@ -6,7 +6,7 @@ import Input from '../components/common/Input'
 import Button from '../components/common/Button'
 import useAuthStore from '../store/authStore'
 import useThemeStore from '../store/themeStore'
-import useLangStore from '../store/LangStore'
+import useLangStore from '../store/langStore'
 import { t } from '../i18n'
 import { Sun, Moon, Languages, ShieldCheck } from 'lucide-react'
 
@@ -30,6 +30,13 @@ export default function Login() {
   useEffect(() => {
     if (hazir && isAuthenticated) navigate('/dashboard', { replace: true })
   }, [hazir, isAuthenticated, navigate])
+
+    useEffect(() => {
+    if (sessionStorage.getItem('wpbot_oturum_bitti')) {
+      sessionStorage.removeItem('wpbot_oturum_bitti')
+      toast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', { icon: '⏱️' })
+    }
+  }, [])
 
   const handleLogin = async () => {
     const yeniHatalar = {}

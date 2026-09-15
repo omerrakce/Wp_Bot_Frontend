@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
@@ -6,9 +7,10 @@ import Modal from '../components/common/Modal'
 import Spinner from '../components/common/Spinner'
 import PhoneInput, { sadeceRakam, gosterTelefon } from '../components/common/PhoneInput'
 import { firmaService } from '../services/firmaService'
+import { whatsappService } from '../services/whatsappService'
 import {
   Building2, Link2, Users, Plus, Pencil, Trash2, Upload, X,
-  ExternalLink, AlertCircle, RefreshCw, CloudOff,
+  ExternalLink, AlertCircle, RefreshCw, CloudOff, Radio, ChevronRight,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useThemeStore from '../store/themeStore'
@@ -61,6 +63,42 @@ const TezgahtarFormu = ({ form, setForm, preview, setPreview, setDosya, dragOver
   </div>
 )
 
+function BotDurumuOzeti() {
+  const { theme } = useThemeStore()
+  const isDark = theme === 'dark'
+  const [durum, setDurum] = useState(null)
+
+  const textPrimary = isDark ? '#F9FAFB' : '#111827'
+  const textSecondary = isDark ? '#9CA3AF' : '#6B7280'
+  const borderColor = isDark ? '#374151' : '#E5E7EB'
+
+  useEffect(() => {
+    whatsappService.durumGetir().then((sonuc) => setDurum(sonuc.veri)).catch(() => setDurum(null))
+  }, [])
+
+  const bagliMi = durum?.bagli
+
+  return (
+    <Link to="/bot-durumu"
+      className="flex items-center justify-between gap-3 p-4 rounded-2xl border transition-colors"
+      style={{ borderColor, backgroundColor: isDark ? '#111827' : 'white' }}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: bagliMi ? 'rgba(37,211,102,0.15)' : (isDark ? '#374151' : '#F3F4F6') }}>
+          <Radio className="w-5 h-5" style={{ color: bagliMi ? '#25D366' : textSecondary }} />
+        </div>
+        <div>
+          <p className="text-sm font-medium" style={{ color: textPrimary }}>Bot Durumu</p>
+          <p className="text-xs mt-0.5" style={{ color: bagliMi ? '#25D366' : textSecondary }}>
+            {durum === null ? 'Yükleniyor...' : bagliMi ? 'Bağlı — bot mesajları yanıtlıyor' : 'WhatsApp bağlı değil'}
+          </p>
+        </div>
+      </div>
+      <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: textSecondary }} />
+    </Link>
+  )
+}
+
 export default function FirmaBilgileri() {
   const { theme } = useThemeStore()
   const isDark = theme === 'dark'
@@ -71,7 +109,7 @@ export default function FirmaBilgileri() {
   const [hata, setHata] = useState(null)
   const [ayarCanli, setAyarCanli] = useState(true)
   const [staffCanli, setStaffCanli] = useState(true)
-  
+
   const [firmaLoading, setFirmaLoading] = useState(false)
   const [tezgahtarLoading, setTezgahtarLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -121,7 +159,7 @@ export default function FirmaBilgileri() {
       setFirma(sonuc.veri)
       setAyarCanli(sonuc.canli)
       toast.success(sonuc.canli ? 'Firma bilgileri kaydedildi!' : 'Kaydedildi (sunucu hazır değil, yerel)')
-        } catch (e) {
+    } catch (e) {
       toast.error(e.message)
     } finally {
       setFirmaLoading(false)
@@ -262,6 +300,8 @@ export default function FirmaBilgileri() {
         </button>
       </div>
 
+      <BotDurumuOzeti />
+
       {/* Genel Bilgiler */}
       <Card>
         <h2 className="font-semibold mb-4 flex items-center gap-2" style={{ color: textPrimary }}>
@@ -325,7 +365,7 @@ export default function FirmaBilgileri() {
             : 'Kapalı — müşteriler doğrudan online sitenize yönlendirilir.'}
         </p>
 
-                {!staffCanli && (
+        {!staffCanli && (
           <div className="flex items-start gap-2.5 p-3 rounded-lg mb-4"
             style={{ backgroundColor: isDark ? 'rgba(245,158,11,0.08)' : '#FFFBEB' }}>
             <CloudOff className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#F59E0B' }} />

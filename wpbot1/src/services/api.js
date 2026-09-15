@@ -56,6 +56,7 @@ const istek = async (yol, secenekler = {}) => {
   if (res.status === 401 && !yetkisiz) {
     tokenSil()
     if (!window.location.pathname.includes('/login')) {
+      sessionStorage.setItem('wpbot_oturum_bitti', '1')
       window.location.href = '/login'
     }
     throw new ApiError('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', 401)

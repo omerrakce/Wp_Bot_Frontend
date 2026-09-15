@@ -285,7 +285,7 @@ export default function BotAyarlari() {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium" style={{ color: textPrimary }}>Kargo Sorulduğunda</label>
-                <textarea rows={2} maxLength={500}
+                <textarea rows={2}
                   value={faq.faqKargo} onChange={(e) => setFaq((f) => ({ ...f, faqKargo: e.target.value }))}
                   placeholder="Kargolarımız 1-3 iş günü içinde teslim edilir."
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
@@ -293,7 +293,7 @@ export default function BotAyarlari() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium" style={{ color: textPrimary }}>İade Sorulduğunda</label>
-                <textarea rows={2} maxLength={500}
+                <textarea rows={2}
                   value={faq.faqIade} onChange={(e) => setFaq((f) => ({ ...f, faqIade: e.target.value }))}
                   placeholder="14 gün içerisinde koşulsuz iade edebilirsiniz."
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
@@ -301,7 +301,7 @@ export default function BotAyarlari() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium" style={{ color: textPrimary }}>Beden Sorulduğunda</label>
-                <textarea rows={2} maxLength={500}
+                <textarea rows={2}
                   value={faq.faqBeden} onChange={(e) => setFaq((f) => ({ ...f, faqBeden: e.target.value }))}
                   placeholder="Ürünlerimiz tam kalıptır, kendi bedeninizi tercih edebilirsiniz."
                   className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"

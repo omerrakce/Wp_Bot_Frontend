@@ -1,6 +1,6 @@
 import { api } from './api'
 
-const DUMMY_URETICI = '123e4567-e89b-12d3-a456-426614174000'
+
 const VARSAYILAN_GORSEL = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop'
 
 const tlFormat = new Intl.NumberFormat('tr-TR', {
@@ -20,7 +20,7 @@ export const fiyatSayiya = (metin) => {
   return Number.isNaN(n) ? 0 : n
 }
 
-const uuidMi = (deger) => /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(String(deger))
+
 
 // API → UI
 const apidenGelen = (u) => ({
@@ -31,7 +31,7 @@ const apidenGelen = (u) => ({
   priceRaw: u.price ?? 0,
   category: u.category || '-',
   renk: u.renk || '-',
-  uretici: (u.uretici && !uuidMi(u.uretici)) ? u.uretici : '-',
+  uretici: u.uretici || '-',
   bedenler: Array.isArray(u.bedenler) ? u.bedenler : [],
   urunKodu: u.urunKodu || '-',
   sezon: u.sezon || '-',
@@ -46,7 +46,7 @@ const apiyeGiden = (form, gorselUrl) => ({
   price: fiyatSayiya(form.price),
   category: form.category,
   renk: form.renk.trim(),
-  uretici: DUMMY_URETICI,
+  uretici: form.uretici?.trim() || null,
   bedenler: form.bedenler,
   urunKodu: form.urunKodu.trim(),
   sezon: form.sezon || '',
@@ -55,10 +55,13 @@ const apiyeGiden = (form, gorselUrl) => ({
 })
 
 export const urunService = {
-      async listele({ sayfa = 1, boyut = 20, arama = '', kategori = '' } = {}) {
+  async listele({ sayfa = 1, boyut = 20, arama = '', kategori = '', sirala = '', durum = '' } = {}) {
     const params = new URLSearchParams({ page: sayfa, page_size: boyut })
     if (arama.trim()) params.set('search', arama.trim())
     if (kategori) params.set('category', kategori)
+    if (sirala) params.set('sort', sirala)
+    if (durum === 'Aktif') params.set('is_active', 'true')
+    if (durum === 'Pasif') params.set('is_active', 'false')
 
     const veri = await api.get(`/api/tenant/products?${params}`)
 

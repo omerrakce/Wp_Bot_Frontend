@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../store/authStore'
 import useThemeStore from '../../store/themeStore'
-import useLangStore from '../../store/LangStore'
+import useLangStore from '../../store/langStore'
 import { mockTenants } from '../../mocks/mockData'
 import { t } from '../../i18n'
 

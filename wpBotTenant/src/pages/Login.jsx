@@ -32,6 +32,13 @@ export default function Login() {
     if (hazir && isAuthenticated) navigate('/dashboard', { replace: true })
   }, [hazir, isAuthenticated, navigate])
 
+    useEffect(() => {
+    if (sessionStorage.getItem('wpbot_oturum_bitti')) {
+      sessionStorage.removeItem('wpbot_oturum_bitti')
+      toast('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', { icon: '⏱️' })
+    }
+  }, [])
+
   const handleLogin = async () => {
     const yeniHatalar = {}
     if (!email.trim()) yeniHatalar.email = 'E-posta zorunludur'
